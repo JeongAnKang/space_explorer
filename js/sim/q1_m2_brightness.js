@@ -263,7 +263,7 @@
                 svgEl('path', { d: cellPath(k, -HALF, -HALF, HALF, HALF), fill: 'none', stroke: '#6f78a8', 'stroke-dasharray': '3 4' }, scene);
             });
             // 빛이 닿은 구면 조각들: k × k 칸, 한 칸의 밝기 = 정확히 1/k²
-            const LABEL = { 1: '1배', 2: '1/4배', 3: '1/9배' };
+            const LABEL = { 1: '1칸', 2: '4칸', 3: '9칸' };
             for (let k = 1; k <= r; k++) {
                 const shade = 1 / (k * k), cur = k === r, step = 2 * HALF / k;
                 for (let i = 0; i < k; i++) for (let j = 0; j < k; j++) {
