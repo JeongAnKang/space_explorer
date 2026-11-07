@@ -163,11 +163,29 @@
         ctrl.querySelector('#to-10').addEventListener('click', () => { slider.value = 10; draw(); });
         slider.addEventListener('input', draw);
         draw();
+        // 탐구 질문 1, 2를 모두 해결해야 다음 단계가 열림
+        const solved = { q1: false, q2: false };
+        const check = key => { solved[key] = true; if (solved.q1 && solved.q2) api.done(); };
         api.quiz(body, {
+            label: '탐구 질문 1', keepStepOpen: true, onRight: () => check('q1'),
             q: '세 별 중 실제로 가장 밝은(빛을 가장 많이 내는) 별은 어느 것일까요?',
             options: ['별 A', '별 B', '별 C'], answer: 1,
             explain: '맞아요. 별 B는 멀리 있어서 어둡게 보이지만 절대 등급이 0.0으로 가장 작아요. 실제 밝기는 절대 등급으로 비교해요.',
             hint: '세 별을 모두 10 pc로 옮겨 절대 등급을 비교해 보세요. 등급의 숫자가 작을수록 밝아요.'
+        });
+        // 탐구 질문 2: 거리지수로 별까지의 거리 비교
+        const q2 = document.createElement('div');
+        q2.className = 'quiz';
+        q2.innerHTML = `<div class="q"><span class="q-label">탐구 질문 2</span>겉보기 등급과 절대 등급으로 별까지의 거리를 비교해 보세요.</div>
+            <div class="formula">▣ <b class="key-gold">거리지수 = 겉보기 등급 − 절대 등급</b></div>`;
+        body.appendChild(q2);
+        Activities.fill(q2, {
+            lines: [
+                '1) 겉보기 등급이 절대 등급보다 작은 별 → 거리지수 < 0 : [[10 pc보다 가까이]] 있는 별',
+                '2) 겉보기 등급이 절대 등급보다 큰 별 → 거리지수 > 0 : [[10 pc보다 멀리]] 있는 별',
+                '3) 겉보기 등급과 절대 등급이 같은 별 → 거리지수 = 0 : [[10 pc에]] 있는 별'
+            ],
+            onSolved: () => check('q2')
         });
     }
 

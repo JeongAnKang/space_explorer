@@ -38,10 +38,11 @@ window.SimKit = {
     let mission = 1, step = 0, stepDone = [];
 
     // 탐구 질문: 정답을 고르면 다음 단계가 열림
-    function quiz(container, { q, options, answer, explain, hint, onRight }) {
+    function quiz(container, { q, options, answer, explain, hint, onRight, label }) {
         const box = document.createElement('div');
         box.className = 'quiz';
-        box.innerHTML = `<div class="q">${q}</div><div class="opts"></div><div class="feedback" aria-live="polite"></div>`;
+        box.dataset.label = label || '탐구 질문';
+        box.innerHTML = `<div class="q"><span class="q-label">${label || '탐구 질문'}</span>${q}</div><div class="opts"></div><div class="feedback" aria-live="polite"></div>`;
         const opts = box.querySelector('.opts'), fb = box.querySelector('.feedback');
         options.forEach((o, i) => {
             const b = document.createElement('button');
@@ -68,7 +69,7 @@ window.SimKit = {
         return {
             questId: QUEST_ID, missionId: m,
             done() { if (mission === m && step === s && !stepDone[s]) { stepDone[s] = true; renderStepChrome(); } },
-            quiz(container, cfg) { return quiz(container, { ...cfg, onRight: () => { cfg.onRight && cfg.onRight(); this.done(); } }); },
+            quiz(container, cfg) { return quiz(container, { ...cfg, onRight: () => { cfg.onRight && cfg.onRight(); if (!cfg.keepStepOpen) this.done(); } }); },
             completeMission() { finishMission(m); }
         };
     }

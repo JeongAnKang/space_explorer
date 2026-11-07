@@ -214,7 +214,9 @@ input[type="range"] { width: 100%; height: 40px; accent-color: var(--star); touc
 /* 탐구 질문 */
 .quiz { display: grid; gap: 10px; padding: 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-2); }
 .quiz .q { font-weight: 800; }
-.quiz .q::before { content: "탐구 질문  "; color: var(--star); font-size: 13px; letter-spacing: .08em; }
+.quiz .q-label { color: var(--star); font-size: 13px; letter-spacing: .08em; margin-right: 8px; }
+.quiz .formula { font-weight: 800; font-size: 18px; padding: 10px 14px; border-radius: 10px; background: var(--sky-deep); border: 1px solid var(--line); }
+.quiz .q::before { content: ""; color: var(--star); font-size: 13px; letter-spacing: .08em; }
 .quiz .opts { display: flex; flex-wrap: wrap; gap: 8px; }
 .quiz .opts .btn { font-weight: 700; }
 .quiz .opts .btn.right { background: var(--done); color: var(--done-ink); border-color: var(--done); }
