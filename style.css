@@ -51,6 +51,8 @@ p { margin: 0; }
 button { font: inherit; color: inherit; }
 .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 .hidden { display: none !important; }
+/* hidden 속성을 준 요소는 display 값과 상관없이 항상 숨김 (예: 나중에 나타나는 탐구 질문) */
+[hidden] { display: none !important; }
 .key-pink { color: var(--pink); font-weight: 800; }
 .key-gold { color: var(--star); font-weight: 800; }
 

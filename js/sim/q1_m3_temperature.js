@@ -47,7 +47,8 @@
         ['mintaka', 'alnilam'], ['alnilam', 'alnitak'], ['alnitak', 'saiph'], ['mintaka', 'rigel']];
 
     function orion(body, api) {
-        body.insertAdjacentHTML('beforeend', '<p class="lead">겨울철 남쪽 하늘의 <b>오리온자리</b>를 관측해 보세요. 왼쪽 위의 <b class="key-gold">베텔게우스</b>와 오른쪽 아래의 <b class="key-gold">리겔</b>은 둘 다 아주 밝은 별이지만 <b>색이 서로 달라요</b>. 별을 눌러 색을 확인해 보세요.</p>');
+        body.insertAdjacentHTML('beforeend', `<p class="lead">겨울철 남쪽 하늘에서 그림과 같은 별자리를 본 적이 있나요? <b>[별자리 선 보기]</b>를 눌러 보세요.</p>
+            <p class="lead" id="or-guide" hidden><b>오리온자리</b>를 관측해 보세요. 왼쪽 위의 <b class="key-gold">베텔게우스</b>와 오른쪽 아래의 <b class="key-gold">리겔</b>은 둘 다 아주 밝은 별이지만 <b>색이 서로 달라요</b>. 별을 눌러 색을 확인해 보세요.</p>`);
         const { view, ctrl } = layout(body);
         const W = 640, H = 430;
         const K = 18, X = ra => 320 + (84.4 - ra) * K, Y = dec => 212 - dec * K;   // 가로·세로 같은 비율
@@ -56,7 +57,8 @@
         // 배경의 희미한 별
         let seed = 17; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
         for (let i = 0; i < 90; i++) svgEl('circle', { cx: rnd() * W, cy: rnd() * H, r: rnd() * 1.1 + .3, fill: '#dfe6ff', opacity: .25 + rnd() * .4 }, svg);
-        const lines = svgEl('g', { stroke: '#8fb4ff', 'stroke-opacity': .35, 'stroke-width': 1.5 }, svg);
+        const lines = svgEl('g', { stroke: '#8fb4ff', 'stroke-opacity': .45, 'stroke-width': 1.5, style: 'display:none' }, svg);
+        const names = [];   // 별 이름표 (별자리 선을 보면 나타남)
         const pos = id => { const st = ORION.find(x => x.id === id); return [X(st.ra), Y(st.dec)]; };
         ORION_LINES.forEach(([a, b]) => { const p = pos(a), q = pos(b); svgEl('line', { x1: p[0], y1: p[1], x2: q[0], y2: q[1] }, lines); });
         const ring = svgEl('circle', { r: 26, fill: 'none', stroke: '#f5c451', 'stroke-width': 2, style: 'display:none' }, svg);
@@ -65,10 +67,11 @@
                 <div class="row"><span>별 이름</span><b id="or-name">별을 눌러 보세요</b></div>
                 <div class="row"><span>보이는 색</span><b id="or-color">—</b></div>
             </div>
-            <label style="display:flex;gap:10px;align-items:center;min-height:44px"><input type="checkbox" id="or-lines" checked style="width:22px;height:22px"> 별자리 선 보기</label>
+            <button type="button" class="btn btn-primary" id="or-lines" aria-pressed="false">별자리 선 보기</button>
             <p class="note">별의 색이 다른 까닭은 다음 단계에서 알아봐요.</p>`;
         const seen = new Set();
         ORION.forEach(st => {
+            // (이름표는 별자리 선을 보기 전까지 숨김)
             const x = X(st.ra), y = Y(st.dec), core = Math.max(2.2, 6.5 - st.mag * 1.3);
             const gid = `or-${st.id}`;
             const gr = svgEl('radialGradient', { id: gid }, defs);
@@ -78,10 +81,10 @@
             svgEl('circle', { cx: x, cy: y, r: core * 4, fill: `url(#${gid})` }, g);
             svgEl('circle', { cx: x, cy: y, r: core, fill: st.color }, g);
             svgEl('circle', { cx: x, cy: y, r: 24, fill: 'transparent' }, g);
-            if (st.key) text(svg, x + (st.id === 'rigel' ? 30 : -28), y + (st.id === 'rigel' ? 6 : -20), st.name, { 'text-anchor': st.id === 'rigel' ? 'start' : 'end', fill: st.color, 'font-weight': 800, 'font-size': 15 });
+            if (st.key) names.push(text(svg, x + (st.id === 'rigel' ? 30 : -28), y + (st.id === 'rigel' ? 6 : -20), st.name, { 'text-anchor': st.id === 'rigel' ? 'start' : 'end', fill: st.color, 'font-weight': 800, 'font-size': 15 }));
             const show = () => {
                 ring.style.display = ''; ring.setAttribute('cx', x); ring.setAttribute('cy', y);
-                ctrl.querySelector('#or-name').textContent = st.name;
+                ctrl.querySelector('#or-name').textContent = revealed ? st.name : '별자리 선을 먼저 보세요';
                 const c = ctrl.querySelector('#or-color');
                 c.textContent = st.colorName; c.style.color = st.color;
                 seen.add(st.id);
@@ -89,7 +92,24 @@
             g.addEventListener('click', show);
             g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); show(); } });
         });
-        ctrl.querySelector('#or-lines').addEventListener('change', e => { lines.style.display = e.target.checked ? '' : 'none'; });
+        names.forEach(t => { t.style.display = 'none'; });   // 처음에는 별 이름을 숨김
+        // [별자리 선 보기] → 선·이름표·관측 안내·탐구 질문이 나타남 (다시 누르면 선만 숨김)
+        let revealed = false;
+        const linesBtn = ctrl.querySelector('#or-lines');
+        linesBtn.addEventListener('click', () => {
+            const on = linesBtn.getAttribute('aria-pressed') !== 'true';
+            linesBtn.setAttribute('aria-pressed', String(on));
+            linesBtn.textContent = on ? '별자리 선 숨기기' : '별자리 선 보기';
+            linesBtn.classList.toggle('btn-primary', !on);
+            lines.style.display = on ? '' : 'none';
+            if (on && !revealed) {
+                revealed = true;
+                names.forEach(t => { t.style.display = ''; });
+                body.querySelector('#or-guide').hidden = false;
+                qz.hidden = false;
+                ctrl.querySelector('#or-name').textContent = '별을 눌러 보세요';
+            }
+        });
         // 탐구 질문: 두 별의 색을 드롭다운에서 고르기
         const COLORS = ['붉은색', '주황색', '황색', '황백색', '백색', '청백색', '청색'];
         const opts = `<option value="">색 고르기</option>` + COLORS.map(c => `<option value="${c}">${c}</option>`).join('');
@@ -102,6 +122,7 @@
                 <button type="button" class="btn btn-primary" id="pick-check">확인</button>
             </div>
             <div class="feedback" aria-live="polite"></div>`;
+        qz.hidden = true;
         body.appendChild(qz);
         const fb = qz.querySelector('.feedback');
         qz.querySelector('#pick-check').addEventListener('click', () => {
