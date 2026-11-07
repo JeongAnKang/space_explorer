@@ -234,38 +234,45 @@
                 const lab = text(scene, CX + R * .8 + 10, CY + R * .6 + 4, `거리 ${k}`, { fill: on ? '#f5c451' : '#6f78a8', 'font-weight': on ? 800 : 600, style: 'cursor:pointer' });
                 lab.addEventListener('click', () => select(k));
             });
-            // 빛 다발: 광원에서 왼쪽 아래로 비스듬히 퍼짐. 거리 k에서 정면을 향한 정사각형 = k × k 칸
-            const DX = -.78, DY = .63;                                // 빛 다발이 향하는 방향 (왼쪽 아래)
-            const TB = .24, rho = k => U * k * .78;                   // 거리 k의 정사각형까지의 길이
-            const cellPx = 2 * rho(1) * TB;                           // 한 칸 크기 (모든 거리에서 같음)
-            const sq = k => { const c = [CX + DX * rho(k), CY + DY * rho(k)], h = cellPx * k / 2;
-                return { x: c[0] - h, y: c[1] - h, side: 2 * h }; };
-            const T = 7, tx = -DX * T, ty = -DY * T;                 // 정사각형의 두께 (광원 쪽으로)
-            const show = Math.max(r, 1);
-            // 빛 다발의 테두리: 광원 → 지금 거리 정사각형의 네 모서리
-            const s0 = sq(show), cs = [[s0.x, s0.y], [s0.x + s0.side, s0.y], [s0.x + s0.side, s0.y + s0.side], [s0.x, s0.y + s0.side]];
-            svgEl('polygon', { points: [[CX, CY], cs[0], cs[3]].map(p => p.join(',')).join(' '), fill: '#f5c451', opacity: .05 }, scene);
-            svgEl('polygon', { points: [[CX, CY], cs[3], cs[2]].map(p => p.join(',')).join(' '), fill: '#f5c451', opacity: .08 }, scene);
+            // 빛 다발: 광원에서 왼쪽 아래(앞쪽)로 퍼져 거리 k의 구면에 닿음
+            // 구면 위의 조각을 k × k 칸으로 나눔. 칸 하나의 크기는 모든 거리에서 같고, 개수만 1·4·9개로 늘어남
+            const norm = v => { const l = Math.hypot(v[0], v[1], v[2]); return [v[0] / l, v[1] / l, v[2] / l]; };
+            const n = norm([-.6, -.5, .62]);                        // 빛 다발 방향 (왼쪽, 아래, 앞쪽)
+            const e1 = norm([n[2], 0, -n[0]]);                        // 구면 조각의 가로 방향
+            const e2 = [n[1] * e1[2] - n[2] * e1[1], n[2] * e1[0] - n[0] * e1[2], n[0] * e1[1] - n[1] * e1[0]];   // 세로 방향
+            const HALF = .19;                                         // 조각의 반폭 (각도의 탄젠트, 모든 거리에서 같음)
+            // 거리 k 구면 위의 점 (a, b ∈ [-HALF, HALF])을 화면 좌표로
+            const onSphere = (k, a, b) => { const d = norm([n[0] + a * e1[0] + b * e2[0], n[1] + a * e1[1] + b * e2[1], n[2] + a * e1[2] + b * e2[2]]); const R = U * k; return P(d[0] * R, d[1] * R, d[2] * R); };
+            // (a0,b0)~(a1,b1) 칸의 테두리를 곡선으로 (각 변을 여러 점으로 나눔)
+            const cellPath = (k, a0, b0, a1, b1) => {
+                const pts = [], N = 6;
+                for (let i = 0; i <= N; i++) pts.push(onSphere(k, a0 + (a1 - a0) * i / N, b0));
+                for (let i = 0; i <= N; i++) pts.push(onSphere(k, a1, b0 + (b1 - b0) * i / N));
+                for (let i = 0; i <= N; i++) pts.push(onSphere(k, a1 - (a1 - a0) * i / N, b1));
+                for (let i = 0; i <= N; i++) pts.push(onSphere(k, a0, b1 - (b1 - b0) * i / N));
+                return 'M' + pts.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L') + 'Z';
+            };
+            // 빛 다발의 테두리: 광원 → 지금 거리 구면 조각의 네 모서리
+            const cs = [[-HALF, -HALF], [HALF, -HALF], [HALF, HALF], [-HALF, HALF]].map(([a, b]) => onSphere(r, a, b));
+            svgEl('polygon', { points: [[CX, CY], cs[0], cs[1]].map(p => p.join(',')).join(' '), fill: '#f5c451', opacity: .06 }, scene);
+            svgEl('polygon', { points: [[CX, CY], cs[3], cs[2]].map(p => p.join(',')).join(' '), fill: '#f5c451', opacity: .06 }, scene);
             cs.forEach(p => svgEl('line', { x1: CX, y1: CY, x2: p[0], y2: p[1], stroke: '#f5c451', 'stroke-dasharray': '4 4', opacity: .65 }, scene));
-            // 아직 빛이 닿지 않은 먼 거리의 정사각형은 흐린 윤곽만
-            [3, 2].forEach(k => {
+            // 아직 빛이 닿지 않은 먼 거리의 조각은 흐린 윤곽만
+            [2, 3].forEach(k => {
                 if (k <= r) return;
-                const q = sq(k);
-                svgEl('rect', { x: q.x, y: q.y, width: q.side, height: q.side, fill: 'none', stroke: '#6f78a8', 'stroke-dasharray': '3 4' }, scene);
+                svgEl('path', { d: cellPath(k, -HALF, -HALF, HALF, HALF), fill: 'none', stroke: '#6f78a8', 'stroke-dasharray': '3 4' }, scene);
             });
-            // 빛이 닿은 정사각형들 (가까운 것부터 그려서 먼 것이 앞에 보이도록)
+            // 빛이 닿은 구면 조각들: k × k 칸, 한 칸의 밝기 = 정확히 1/k²
             const LABEL = { 1: '1배', 2: '1/4배', 3: '1/9배' };
             for (let k = 1; k <= r; k++) {
-                const q = sq(k), shade = 1 / (k * k), cur = k === r;
-                // 두께 면 (위쪽, 오른쪽)
-                svgEl('polygon', { points: `${q.x},${q.y} ${q.x + tx},${q.y + ty} ${q.x + q.side + tx},${q.y + ty} ${q.x + q.side},${q.y}`, fill: '#ffe27a', 'fill-opacity': shade * .55, stroke: '#f5c451', 'stroke-opacity': .6 }, scene);
-                svgEl('polygon', { points: `${q.x + q.side},${q.y} ${q.x + q.side + tx},${q.y + ty} ${q.x + q.side + tx},${q.y + q.side + ty} ${q.x + q.side},${q.y + q.side}`, fill: '#ffe27a', 'fill-opacity': shade * .4, stroke: '#f5c451', 'stroke-opacity': .6 }, scene);
-                // 앞면: k × k 칸, 한 칸의 밝기 = 1/k² (칠하는 세기를 정확히 1/k²로)
+                const shade = 1 / (k * k), cur = k === r, step = 2 * HALF / k;
                 for (let i = 0; i < k; i++) for (let j = 0; j < k; j++) {
-                    svgEl('rect', { x: q.x + i * cellPx, y: q.y + j * cellPx, width: cellPx, height: cellPx, fill: '#ffe27a', 'fill-opacity': shade, stroke: '#f5c451', 'stroke-opacity': .7, 'stroke-width': 1 }, scene);
+                    const a0 = -HALF + i * step, b0 = -HALF + j * step;
+                    svgEl('path', { d: cellPath(k, a0, b0, a0 + step, b0 + step), fill: '#ffe27a', 'fill-opacity': shade, stroke: '#f5c451', 'stroke-opacity': .75, 'stroke-width': 1 }, scene);
                 }
-                svgEl('rect', { x: q.x, y: q.y, width: q.side, height: q.side, fill: 'none', stroke: '#f5c451', 'stroke-width': cur ? 2.5 : 1.2 }, scene);
-                text(scene, q.x + q.side + 8, q.y + q.side + 2, LABEL[k], { 'text-anchor': 'start', fill: cur ? '#f5c451' : '#a9b1d9', 'font-weight': 800, 'font-size': cur ? 15 : 13 });
+                svgEl('path', { d: cellPath(k, -HALF, -HALF, HALF, HALF), fill: 'none', stroke: '#f5c451', 'stroke-width': cur ? 2.5 : 1.2 }, scene);
+                const lp = onSphere(k, HALF, -HALF);
+                text(scene, lp[0] + 8, lp[1] + 4, LABEL[k], { fill: cur ? '#f5c451' : '#a9b1d9', 'font-weight': 800, 'font-size': cur ? 15 : 13 });
             }
             // 광원 (반구의 중심)
             svgEl('circle', { cx: CX, cy: CY, r: 30, fill: 'url(#bdSrc)' }, scene);
