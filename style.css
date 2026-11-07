@@ -120,11 +120,15 @@ input[type="range"] { width: 100%; height: 40px; accent-color: var(--star); touc
 
 .quests { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
 .quest-card { display: grid; gap: 16px; padding: 22px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); min-width: 0; }
-.quest-card.locked { opacity: .55; }
+/* 잠긴 퀘스트는 아이콘·미션만 흐리게 (사진 출처 표기는 항상 또렷하게) */
+.quest-card.locked .quest-head, .quest-card.locked .quest-missions { opacity: .55; }
 .quest-head { display: flex; align-items: center; gap: 18px; }
 .planet { width: 84px; height: 84px; flex: none; border-radius: 50%; border: 0; cursor: pointer; position: relative; }
 .planet.star-q { background: radial-gradient(circle at 35% 35%, #fff6d6 0%, #f5c451 30%, #e3802e 70%, #7a2e12 100%); box-shadow: 0 0 36px rgba(245, 196, 81, .45); }
 .planet.space-q { background: radial-gradient(circle at 35% 35%, #d8e4ff 0%, #8fb4ff 25%, #5a4fd1 60%, #1d1452 100%); box-shadow: 0 0 36px rgba(143, 180, 255, .4); }
+.planet.photo { background: var(--sky-deep) center / cover no-repeat; box-shadow: 0 0 36px rgba(255, 170, 120, .35); border: 2px solid rgba(245, 196, 81, .55); }
+.planet.photo::after { display: none; }
+.photo-credit { font-size: 12px; color: var(--ink-dim); line-height: 1.4; }
 .planet.space-q::after { content: ""; position: absolute; inset: 34px -14px; border: 3px solid rgba(216, 228, 255, .55); border-radius: 50%; transform: rotate(-18deg); }
 .quest-head h2 { font-size: 24px; }
 .quest-head .meta { color: var(--ink-dim); font-size: 15px; }

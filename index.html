@@ -39,6 +39,16 @@
         (function () {
             const PLANET = { 1: 'star-q', 2: 'space-q' };
             const BLURB = { 1: '거리, 밝기, 온도로 별을 알아봐요.', 2: '우리은하에서 팽창하는 우주, 우주탐사까지.' };
+            // 퀘스트 아이콘 사진 (파일이 있을 때만 사진으로, 없으면 기본 행성 그림)
+            // 창조의 기둥: ESA/Webb, CC BY 4.0 — 출처 표기를 그대로 화면에 보여야 함
+            const PHOTO = { 2: { src: 'images/pillars_of_creation.webp', alt: '제임스 웹 우주 망원경이 촬영한 창조의 기둥',
+                credit: '사진: 창조의 기둥 · NASA, ESA, CSA, STScI; J. DePasquale, A. Koekemoer, A. Pagan (STScI)' } };
+            const photoOk = {};
+            Object.entries(PHOTO).forEach(([q, p]) => {
+                const img = new Image();
+                img.onload = () => { photoOk[q] = true; render(); };
+                img.src = p.src;
+            });
 
             function render() {
                 const total = totalMissions(), done = completedCount();
@@ -66,6 +76,14 @@
                             <div><div class="meta">QUEST ${q} · 미션 ${n}/${quest.missions.length} 완료</div><h2>${quest.name}</h2><div class="meta">${BLURB[q]}</div></div>
                         </div>
                         <div class="quest-missions"></div>`;
+                    const photo = PHOTO[q];
+                    if (photo && photoOk[q]) {
+                        const pl = card.querySelector('.planet');
+                        pl.classList.add('photo');
+                        pl.style.backgroundImage = `url('${photo.src}')`;
+                        pl.setAttribute('aria-label', `퀘스트 ${q} ${quest.name} 들어가기 (${photo.alt})`);
+                        card.querySelector('.quest-head').insertAdjacentHTML('afterend', `<p class="photo-credit">${photo.credit}</p>`);
+                    }
                     card.querySelector('.planet').addEventListener('click', () => {
                         if (!open) { toast(lockMessage(q, 1)); return; }
                         location.href = quest.page;
