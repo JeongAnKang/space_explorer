@@ -1,81 +1,172 @@
 // 퀘스트 1 · 미션 1 거리 — s1 시차, s2 연주시차, 내용정리
 (function () {
-    const { svgEl, layout } = SimKit;
+    const { svgEl, layout, text } = SimKit;
 
-    // ---------- 단계 1: 시차 ----------
+    // ---------- 단계 1: 시차 (각도기로 직접 재기) ----------
     function parallaxIntro(body, api) {
-        body.insertAdjacentHTML('beforeend', '<p class="lead">팔을 뻗어 연필을 세우고 한쪽 눈씩 번갈아 감아 보면, 연필이 뒤쪽 배경에 대해 움직여 보여요. 관측 위치에 따라 물체의 위치가 달라 보이는 각을 <b>시차</b>라고 해요.</p>');
+        body.insertAdjacentHTML('beforeend', '<p class="lead">팔을 뻗어 연필을 세우고 한쪽 눈씩 번갈아 감아 보면, 연필심 끝이 뒤쪽 배경에 대해 움직여 보여요. 두 눈에서 연필심 끝을 바라본 두 시선이 이루는 각을 <b>시차</b>라고 해요. <b>각도기를 끌어</b> 중심을 연필심 끝에 맞추고 시차를 직접 재 보세요.</p>');
         const { view, ctrl } = layout(body);
-        const W = 640, H = 380, BG = 48, EYE_Y = 340, LX = 296, RX = 344, PX = 320;
-        const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': '두 눈으로 연필을 볼 때의 시차' }, view);
+        const W = 640, H = 570, BG = 48, EYE_Y = 520, LX = 290, RX = 350, PX = 320, R = 105;
+        const depthOf = d => 110 + (d - 1) * 55;                               // 거리 1~5 → 눈에서 연필심 끝까지
+        const trueAngle = d => 2 * Math.atan(((RX - LX) / 2) / depthOf(d)) * 180 / Math.PI;
+        const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': '두 눈으로 연필심 끝을 볼 때의 시차와 각도기' }, view);
+
         // 배경 눈금판
         svgEl('rect', { x: 20, y: 14, width: W - 40, height: 52, rx: 8, fill: '#1d2758', stroke: '#2f3b78' }, svg);
         for (let i = 0; i <= 30; i++) {
             const x = 32 + i * ((W - 64) / 30);
             svgEl('line', { x1: x, y1: BG - (i % 5 ? 6 : 12), x2: x, y2: BG + 2, stroke: '#a9b1d9', 'stroke-width': 1.5 }, svg);
-            if (i % 5 === 0) { const t = svgEl('text', { x, y: 30, 'text-anchor': 'middle', fill: '#a9b1d9', 'font-size': 13 }, svg); t.textContent = i; }
+            if (i % 5 === 0) text(svg, x, 30, String(i), { 'text-anchor': 'middle' });
         }
         const tickAt = x => (x - 32) / ((W - 64) / 30);
-        const sight = svgEl('line', { stroke: '#f5c451', 'stroke-width': 2, 'stroke-dasharray': '6 5' }, svg);
-        const sight2 = svgEl('line', { stroke: '#8fb4ff', 'stroke-width': 2, 'stroke-dasharray': '6 5' }, svg);
-        const mark = svgEl('polygon', { fill: '#f5c451' }, svg);
-        const mark2 = svgEl('polygon', { fill: '#8fb4ff' }, svg);
+
+        // 보조선: 눈 → 연필심 끝 → 배경
+        const sightL = svgEl('line', { stroke: '#f5c451', 'stroke-width': 2, 'stroke-dasharray': '6 5' }, svg);
+        const sightR = svgEl('line', { stroke: '#8fb4ff', 'stroke-width': 2, 'stroke-dasharray': '6 5' }, svg);
+        const markL = svgEl('polygon', { fill: '#f5c451' }, svg);
+        const markR = svgEl('polygon', { fill: '#8fb4ff' }, svg);
+
+        // 연필 (위쪽 끝이 연필심)
         const pencil = svgEl('g', {}, svg);
-        svgEl('rect', { x: -6, y: -34, width: 12, height: 60, rx: 2, fill: '#f5c451' }, pencil);
-        svgEl('polygon', { points: '-6,-34 6,-34 0,-48', fill: '#ffe2a8' }, pencil);
+        svgEl('polygon', { points: '-7,22 7,22 3,7 -3,7', fill: '#f0d2a0' }, pencil);       // 깎은 나무
+        svgEl('polygon', { points: '-3,7 3,7 0,0', fill: '#4a4a55' }, pencil);              // 연필심
+        svgEl('rect', { x: -7, y: 22, width: 14, height: 58, fill: '#f5c451' }, pencil);
+        svgEl('rect', { x: -7, y: 80, width: 14, height: 8, fill: '#c0c4d8' }, pencil);
+        svgEl('rect', { x: -7, y: 88, width: 14, height: 9, rx: 3, fill: '#ff9db0' }, pencil);
+        const tipDot = svgEl('circle', { r: 3, fill: '#ffffff' }, svg);
+
         // 얼굴과 두 눈
-        svgEl('ellipse', { cx: 320, cy: EYE_Y + 22, rx: 70, ry: 30, fill: '#1d2758', stroke: '#2f3b78' }, svg);
+        svgEl('ellipse', { cx: 320, cy: EYE_Y + 22, rx: 76, ry: 26, fill: '#1d2758', stroke: '#2f3b78' }, svg);
         const eyeL = svgEl('circle', { cx: LX, cy: EYE_Y, r: 9, fill: '#eef1ff' }, svg);
         const eyeR = svgEl('circle', { cx: RX, cy: EYE_Y, r: 9, fill: '#eef1ff' }, svg);
 
+        // 각도기 (반원, 위로 열림 / 오른쪽 0° → 위 90° → 왼쪽 180°)
+        // 두 시선은 연필심 끝에서 엇갈리므로, 위쪽(배경 쪽)에서 재도 같은 각(맞꼭지각)
+        const prot = svgEl('g', { style: 'cursor:grab', tabindex: 0, role: 'button', 'aria-label': '각도기, 끌어서 옮기기' }, svg);
+        svgEl('path', { d: `M${-R} 0 A${R} ${R} 0 0 1 ${R} 0 Z`, fill: 'rgba(143, 180, 255, .13)', stroke: '#8fb4ff', 'stroke-width': 1.5 }, prot);
+        svgEl('path', { d: `M${-R * .45} 0 A${R * .45} ${R * .45} 0 0 1 ${R * .45} 0`, fill: 'none', stroke: '#8fb4ff', 'stroke-width': 1, opacity: .5 }, prot);
+        for (let a = 0; a <= 180; a++) {
+            const len = a % 10 === 0 ? 16 : a % 5 === 0 ? 10 : 5;
+            const c = Math.cos(a * Math.PI / 180), sn = -Math.sin(a * Math.PI / 180);
+            svgEl('line', { x1: R * c, y1: R * sn, x2: (R - len) * c, y2: (R - len) * sn, stroke: '#cfdcff', 'stroke-width': a % 10 === 0 ? 1.3 : .8 }, prot);
+            if (a % 10 === 0) text(prot, (R - 28) * c, (R - 28) * sn + 4, String(a), { 'text-anchor': 'middle', fill: '#cfdcff', 'font-size': 10.5 });
+        }
+        svgEl('line', { x1: -10, y1: 0, x2: 10, y2: 0, stroke: '#ff7a8a', 'stroke-width': 1.5 }, prot);
+        svgEl('line', { x1: 0, y1: -10, x2: 0, y2: 10, stroke: '#ff7a8a', 'stroke-width': 1.5 }, prot);
+        const snapNote = text(svg, 0, 0, '', { fill: '#4fd1b5', 'font-weight': 700 });
+
         ctrl.innerHTML = `
             <div><div class="seg" role="group" aria-label="어느 눈으로 볼까요">
-                <button type="button" data-eye="L" aria-pressed="true">왼쪽 눈</button>
+                <button type="button" data-eye="L" aria-pressed="false">왼쪽 눈</button>
                 <button type="button" data-eye="R" aria-pressed="false">오른쪽 눈</button>
-                <button type="button" data-eye="B" aria-pressed="false">두 눈 비교</button>
+                <button type="button" data-eye="B" aria-pressed="true">두 눈 비교</button>
             </div></div>
             <div class="slider"><label for="pen-d">연필까지의 거리 <output id="pen-d-out"></output></label>
-                <input id="pen-d" type="range" min="1" max="5" step="0.1" value="1.5"></div>
+                <input id="pen-d" type="range" min="1" max="5" step="1" value="1"></div>
             <div class="readout">
-                <div class="row"><span>왼쪽 눈으로 본 눈금</span><b id="rL"></b></div>
-                <div class="row"><span>오른쪽 눈으로 본 눈금</span><b id="rR"></b></div>
-                <div class="row"><span>눈금 차이 (시차)</span><b id="rD"></b></div>
-            </div>`;
-        let eye = 'L';
+                <div class="row"><span>왼쪽 눈으로 본 배경 눈금</span><b id="rL"></b></div>
+                <div class="row"><span>오른쪽 눈으로 본 배경 눈금</span><b id="rR"></b></div>
+            </div>
+            <div class="readout">
+                <label for="ang-in" style="color:var(--ink-dim);font-weight:600;font-size:15px">각도기로 잰 시차 (두 시선의 눈금 차이)</label>
+                <div style="display:flex;gap:8px;align-items:center">
+                    <input id="ang-in" type="number" inputmode="decimal" min="0" max="90" step="0.5" placeholder="예: 25" style="flex:1;min-width:0;min-height:48px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;font-size:18px">
+                    <span>°</span>
+                    <button type="button" class="btn btn-primary" id="ang-rec">기록</button>
+                </div>
+                <div id="ang-msg" style="font-size:14px;color:var(--ink-dim);min-height:1.4em" aria-live="polite"></div>
+            </div>
+            <table class="data-table"><thead><tr><th>연필 거리</th><th>잰 시차</th><th>확인</th></tr></thead><tbody id="ang-rows"></tbody></table>`;
+
+        let eye = 'B', snapped = false, pos = { x: 510, y: 480 };
         const slider = ctrl.querySelector('#pen-d');
-        const proj = (ex, py) => ex + (PX - ex) * (EYE_Y - BG) / (EYE_Y - py);
+        const tipY = () => EYE_Y - depthOf(parseInt(slider.value, 10));
+        const proj = (ex, ty) => ex + (PX - ex) * (EYE_Y - BG) / (EYE_Y - ty);
+        const labelOf = d => `${d} (${d <= 2 ? '가까움' : d >= 4 ? '멂' : '중간'})`;
+
         function draw() {
-            const d = parseFloat(slider.value);
-            const py = EYE_Y - (40 + d * 46);
-            pencil.setAttribute('transform', `translate(${PX} ${py})`);
-            const xl = proj(LX, py), xr = proj(RX, py);
+            const d = parseInt(slider.value, 10), ty = tipY();
+            pencil.setAttribute('transform', `translate(${PX} ${ty})`);
+            tipDot.setAttribute('cx', PX); tipDot.setAttribute('cy', ty);
+            const xl = proj(LX, ty), xr = proj(RX, ty);
             const show = (line, m, ex, xb, on) => {
                 line.style.display = m.style.display = on ? '' : 'none';
                 line.setAttribute('x1', ex); line.setAttribute('y1', EYE_Y); line.setAttribute('x2', xb); line.setAttribute('y2', BG);
                 m.setAttribute('points', `${xb - 8},${BG + 18} ${xb + 8},${BG + 18} ${xb},${BG + 4}`);
             };
-            show(sight, mark, LX, xl, eye !== 'R');
-            show(sight2, mark2, RX, xr, eye !== 'L');
+            show(sightL, markL, LX, xl, eye !== 'R');
+            show(sightR, markR, RX, xr, eye !== 'L');
             eyeL.setAttribute('fill', eye === 'R' ? '#2f3b78' : '#eef1ff');
             eyeR.setAttribute('fill', eye === 'L' ? '#2f3b78' : '#eef1ff');
-            ctrl.querySelector('#pen-d-out').textContent = d <= 2 ? '가까움' : d >= 4 ? '멂' : '중간';
+            if (snapped) pos = { x: PX, y: ty };
+            prot.setAttribute('transform', `translate(${pos.x} ${pos.y})`);
+            snapNote.textContent = snapped ? '중심을 연필심 끝에 맞췄어요' : '';
+            snapNote.setAttribute('x', PX + R + 8); snapNote.setAttribute('y', ty + 4);
+            ctrl.querySelector('#pen-d-out').textContent = labelOf(d);
             ctrl.querySelector('#rL').textContent = tickAt(xl).toFixed(1);
             ctrl.querySelector('#rR').textContent = tickAt(xr).toFixed(1);
-            ctrl.querySelector('#rD').textContent = Math.abs(tickAt(xl) - tickAt(xr)).toFixed(1) + ' 칸';
         }
+
+        // 각도기 끌기 (중심이 연필심 끝 가까이 오면 딱 붙음)
+        let drag = null;
+        prot.addEventListener('pointerdown', e => {
+            const [x, y] = SimKit.point(svg, e, W, H);
+            drag = { dx: x - pos.x, dy: y - pos.y }; snapped = false;
+            prot.setPointerCapture(e.pointerId); prot.style.cursor = 'grabbing'; e.preventDefault();
+        });
+        prot.addEventListener('pointermove', e => {
+            if (!drag) return;
+            const [x, y] = SimKit.point(svg, e, W, H);
+            pos = { x: Math.max(R * .3, Math.min(W - R * .3, x - drag.dx)), y: Math.max(R * .5, Math.min(H - 10, y - drag.dy)) };
+            draw();
+        });
+        const drop = () => {
+            if (!drag) return;
+            drag = null; prot.style.cursor = 'grab';
+            if (Math.hypot(pos.x - PX, pos.y - tipY()) < 22) snapped = true;
+            draw();
+        };
+        prot.addEventListener('pointerup', drop);
+        prot.addEventListener('pointercancel', drop);
+        prot.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); snapped = true; draw(); } });
+
+        // 측정값 기록
+        const records = {};
+        const holder = document.createElement('div');
+        function record() {
+            const d = parseInt(slider.value, 10), v = parseFloat(ctrl.querySelector('#ang-in').value);
+            const msg = ctrl.querySelector('#ang-msg');
+            if (!snapped) { msg.textContent = '먼저 각도기의 중심을 연필심 끝에 맞춰 주세요.'; return; }
+            if (!(v > 0)) { msg.textContent = '잰 각도를 숫자로 적어 주세요.'; return; }
+            const t = trueAngle(d), ok = Math.abs(v - t) <= 2;
+            records[d] = { v, ok, t };
+            msg.textContent = ok ? `잘 쟀어요! 실제 시차는 약 ${t.toFixed(1)}°예요.` : '다시 재 보세요. 두 시선이 가리키는 눈금을 각각 읽고 큰 값에서 작은 값을 빼요.';
+            ctrl.querySelector('#ang-rows').innerHTML = Object.keys(records).sort().map(k => {
+                const r = records[k];
+                return `<tr><td>${labelOf(+k)}</td><td class="num">${r.v}°</td><td style="color:${r.ok ? 'var(--done)' : 'var(--wrong)'}">${r.ok ? '정확' : '다시'}</td></tr>`;
+            }).join('');
+            if (Object.values(records).filter(r => r.ok).length >= 2) quizBox.hidden = false;
+            else if (ok) msg.textContent += ' 연필 거리를 바꿔 한 번 더 재 보세요.';
+        }
+        ctrl.querySelector('#ang-rec').addEventListener('click', record);
+        ctrl.querySelector('#ang-in').addEventListener('keydown', e => { if (e.key === 'Enter') record(); });
+
         ctrl.querySelectorAll('[data-eye]').forEach(b => b.addEventListener('click', () => {
             eye = b.dataset.eye;
             ctrl.querySelectorAll('[data-eye]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
             draw();
         }));
-        slider.addEventListener('input', draw);
+        slider.addEventListener('input', () => { ctrl.querySelector('#ang-in').value = ''; ctrl.querySelector('#ang-msg').textContent = ''; draw(); });
         draw();
-        api.quiz(body, {
+
+        body.appendChild(holder);
+        const quizBox = api.quiz(holder, {
             q: '연필을 눈에서 멀리 할수록 시차는 어떻게 될까요?',
             options: ['커진다', '작아진다', '변하지 않는다'], answer: 1,
             explain: '맞아요. 물체가 멀리 있을수록 시차가 작아져요. 그래서 시차를 재면 거리를 알 수 있어요.',
-            hint: '슬라이더로 연필을 멀리 옮기면서 \'눈금 차이\'가 어떻게 변하는지 보세요.'
+            hint: '기록한 표에서 가까울 때와 멀 때의 시차를 비교해 보세요.'
         });
+        quizBox.hidden = true;
     }
 
     // ---------- 단계 2: 연주시차 ----------
