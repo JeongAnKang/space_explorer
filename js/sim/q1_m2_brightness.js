@@ -177,8 +177,9 @@
         const { view, ctrl } = layout(body);
         // 광원을 가운데 두고 빛이 구면으로 퍼지는 모습을 아래쪽 반구(그릇 모양)로 표현
         // 위에서 비스듬히 내려다본 모습: 반구 안쪽 바닥에 빛 다발이 닿는 넓이 = d × d 칸, 한 칸의 밝기 = 1/d²
-        const W = 640, H = 330, CX = 290, CY = 112, U = 60, TAN = .25;
-        const SIN = .5, COS = Math.sqrt(1 - SIN * SIN);            // 내려다보는 각도
+        const W = 640, H = 350, CX = 290, CY = 80, U = 60, TAN = .25;
+        const SIN = .3;                                            // 시점: 낮을수록 광원이 있는 단면(입구 타원)이 납작하게 보임
+        const COS = 1.3;                                           // 옆면 높이 (이전 0.87의 1.5배)
         const CELL = 2 * U * TAN;                                   // 한 칸의 크기는 거리와 상관없이 같음
         const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': '광원에서 반구 모양으로 퍼지는 빛과 거리에 따라 넓어지는 면적' }, view);
         const defs = svgEl('defs', {}, svg);
@@ -215,9 +216,9 @@
                 // 그릇 안쪽 면 (아래쪽 반원 + 뒤쪽 입구)
                 svgEl('path', { d: `M${CX - R} ${CY} A${R} ${R * COS} 0 0 0 ${CX + R} ${CY} A${R} ${ry(k)} 0 0 0 ${CX - R} ${CY} Z`,
                     fill: on ? 'url(#bdBowl)' : 'none' }, scene);
-                // 뒤쪽 입구 테두리
+                // 뒤쪽 입구 테두리 (실선)
                 svgEl('path', { d: `M${CX - R} ${CY} A${R} ${ry(k)} 0 0 1 ${CX + R} ${CY}`, fill: 'none', stroke: '#f5c451',
-                    'stroke-opacity': on ? .5 : .15, 'stroke-dasharray': '4 5' }, scene);
+                    'stroke-width': on ? 2 : 1, 'stroke-opacity': on ? .85 : .25 }, scene);
                 // 그릇 바깥선 (아래쪽 반원)
                 svgEl('path', { d: `M${CX - R} ${CY} A${R} ${R * COS} 0 0 0 ${CX + R} ${CY}`, fill: 'none', stroke: '#f5c451',
                     'stroke-width': on ? 2.5 : 1, 'stroke-opacity': on ? .95 : .3, 'stroke-dasharray': on ? '' : '5 6' }, scene);
@@ -251,7 +252,7 @@
             }
             const cur = corners(r);
             svgEl('polygon', { points: cur.map(p => p.join(',')).join(' '), fill: 'none', stroke: '#f5c451', 'stroke-width': 2 }, scene);
-            text(scene, cur[2][0] + 12, (cur[1][1] + cur[2][1]) / 2 + 5, `${r * r}칸`, { fill: '#f5c451', 'font-weight': 800, 'font-size': 15 });
+            text(scene, cur[1][0] + 8, cur[1][1] - 6, `${r * r}칸`, { fill: '#f5c451', 'font-weight': 800, 'font-size': 15 });
             // 광원 (반구의 중심)
             svgEl('circle', { cx: CX, cy: CY, r: 30, fill: 'url(#bdSrc)' }, scene);
             svgEl('circle', { cx: CX, cy: CY, r: 7, fill: '#fffbe6' }, scene);
