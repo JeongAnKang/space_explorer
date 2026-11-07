@@ -4,7 +4,7 @@
 
     // ---------- 단계 1: 시차 (각도기로 직접 재기) ----------
     function parallaxIntro(body, api) {
-        body.insertAdjacentHTML('beforeend', '<p class="lead">팔을 뻗어 연필을 세우고 한쪽 눈씩 번갈아 감아 보면, 연필심 끝이 뒤쪽 배경에 대해 움직여 보여요. 두 눈에서 연필심 끝을 바라본 두 시선이 이루는 각을 <b>시차</b>라고 해요. <b>각도기를 끌어</b> 중심을 연필심 끝에 맞추고 시차를 직접 재 보세요.</p>');
+        body.insertAdjacentHTML('beforeend', '<p class="lead">팔을 뻗어 연필을 세우고 한쪽 눈씩 번갈아 감아 보면, 연필심 끝이 뒤쪽 배경에 대해 움직여 보여요. 두 눈에서 연필심 끝을 바라본 두 시선이 이루는 각을 <b>시차</b>라고 해요. <b>각도기를 끌어</b> 중심을 연필심 끝에 맞추고, 필요하면 <b>노란 손잡이로 돌려서</b> 시차를 직접 재 보세요.</p>');
         const { view, ctrl } = layout(body);
         const W = 640, H = 570, BG = 48, EYE_Y = 520, LX = 290, RX = 350, PX = 320, R = 105;
         const depthOf = d => 110 + (d - 1) * 55;                               // 거리 1~5 → 눈에서 연필심 끝까지
@@ -53,7 +53,14 @@
         }
         svgEl('line', { x1: -10, y1: 0, x2: 10, y2: 0, stroke: '#ff7a8a', 'stroke-width': 1.5 }, prot);
         svgEl('line', { x1: 0, y1: -10, x2: 0, y2: 10, stroke: '#ff7a8a', 'stroke-width': 1.5 }, prot);
-        const snapNote = text(svg, 0, 0, '', { fill: '#4fd1b5', 'font-weight': 700 });
+        // 회전 손잡이 (각도기 오른쪽 끝)
+        const knob = svgEl('g', { style: 'cursor:alias', tabindex: 0, role: 'button', 'aria-label': '각도기 회전 손잡이. 좌우 화살표 키로 1도씩 돌리기' }, prot);
+        svgEl('line', { x1: R, y1: 0, x2: R + 14, y2: 0, stroke: '#f5c451', 'stroke-width': 2 }, knob);
+        svgEl('circle', { cx: R + 26, cy: 0, r: 24, fill: 'transparent' }, knob);
+        svgEl('circle', { cx: R + 26, cy: 0, r: 12, fill: '#f5c451' }, knob);
+        svgEl('path', { d: `M${R + 20} -4 A7 7 0 1 1 ${R + 21} 5`, fill: 'none', stroke: '#241a00', 'stroke-width': 2 }, knob);
+        svgEl('path', { d: `M${R + 17} -8 L${R + 20} -3 L${R + 25} -6`, fill: 'none', stroke: '#241a00', 'stroke-width': 2 }, knob);
+        const snapNote = text(svg, 24, 92, '', { fill: '#4fd1b5', 'font-weight': 700, 'pointer-events': 'none' });
 
         ctrl.innerHTML = `
             <div><div class="seg" role="group" aria-label="어느 눈으로 볼까요">
@@ -76,9 +83,13 @@
                 </div>
                 <div id="ang-msg" style="font-size:14px;color:var(--ink-dim);min-height:1.4em" aria-live="polite"></div>
             </div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                <span style="color:var(--ink-dim);font-size:15px;font-weight:600">각도기 기울기 <b class="num" id="rot-out" style="color:var(--star)">0°</b></span>
+                <button type="button" class="btn" id="rot-reset">바로 세우기</button>
+            </div>
             <table class="data-table"><thead><tr><th>연필 거리</th><th>잰 시차</th><th>확인</th></tr></thead><tbody id="ang-rows"></tbody></table>`;
 
-        let eye = 'B', snapped = false, pos = { x: 510, y: 480 };
+        let eye = 'B', snapped = false, pos = { x: 510, y: 480 }, rot = 0;
         const slider = ctrl.querySelector('#pen-d');
         const tipY = () => EYE_Y - depthOf(parseInt(slider.value, 10));
         const proj = (ex, ty) => ex + (PX - ex) * (EYE_Y - BG) / (EYE_Y - ty);
@@ -99,9 +110,9 @@
             eyeL.setAttribute('fill', eye === 'R' ? '#2f3b78' : '#eef1ff');
             eyeR.setAttribute('fill', eye === 'L' ? '#2f3b78' : '#eef1ff');
             if (snapped) pos = { x: PX, y: ty };
-            prot.setAttribute('transform', `translate(${pos.x} ${pos.y})`);
+            prot.setAttribute('transform', `translate(${pos.x} ${pos.y}) rotate(${rot})`);
+            ctrl.querySelector('#rot-out').textContent = `${Math.round(-rot)}°`;
             snapNote.textContent = snapped ? '중심을 연필심 끝에 맞췄어요' : '';
-            snapNote.setAttribute('x', PX + R + 8); snapNote.setAttribute('y', ty + 4);
             ctrl.querySelector('#pen-d-out').textContent = labelOf(d);
             ctrl.querySelector('#rL').textContent = tickAt(xl).toFixed(1);
             ctrl.querySelector('#rR').textContent = tickAt(xr).toFixed(1);
@@ -128,7 +139,30 @@
         };
         prot.addEventListener('pointerup', drop);
         prot.addEventListener('pointercancel', drop);
-        prot.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); snapped = true; draw(); } });
+        prot.addEventListener('keydown', e => {
+            if (e.target === knob) return;
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); snapped = true; draw(); }
+        });
+        // 손잡이를 돌리면 각도기 중심을 기준으로 회전 (1도 단위)
+        let turning = false;
+        knob.addEventListener('pointerdown', e => {
+            e.stopPropagation(); e.preventDefault();
+            turning = true; knob.setPointerCapture(e.pointerId);
+        });
+        knob.addEventListener('pointermove', e => {
+            if (!turning) return;
+            const [x, y] = SimKit.point(svg, e, W, H);
+            rot = Math.round(Math.atan2(y - pos.y, x - pos.x) * 180 / Math.PI);
+            draw();
+        });
+        const stopTurn = () => { turning = false; };
+        knob.addEventListener('pointerup', stopTurn);
+        knob.addEventListener('pointercancel', stopTurn);
+        knob.addEventListener('keydown', e => {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); rot -= 1; draw(); }
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); rot += 1; draw(); }
+        });
+        ctrl.querySelector('#rot-reset').addEventListener('click', () => { rot = 0; draw(); });
 
         // 측정값 기록
         const records = {};
