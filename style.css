@@ -52,6 +52,7 @@ button { font: inherit; color: inherit; }
 .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 .hidden { display: none !important; }
 .key-pink { color: var(--pink); font-weight: 800; }
+.key-gold { color: var(--star); font-weight: 800; }
 
 /* ---------- 버튼 ---------- */
 .btn {

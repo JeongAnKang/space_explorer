@@ -68,7 +68,7 @@
         const spots = [[120, 250, 3], [470, 90, 1], [300, 160, 5], [540, 270, 2], [210, 70, 6], [380, 300, 4]];
         let next = 1;
         ctrl.innerHTML = `<div class="readout" id="hip-list"><div class="row"><span>다음에 누를 별</span><b id="hip-next">1등성</b></div></div>
-            <p class="note" id="hip-fact" hidden>히파르코스는 가장 밝은 별을 1등성, 맨눈으로 겨우 보이는 별을 6등성으로 나누었어요. 오늘날 측정해 보니 <b>1등성은 6등성보다 약 100배</b> 밝았어요. 지금은 이를 바탕으로 별의 밝기를 '등급'으로 나타내며, 1등급 차이는 약 2.5배 밝기 차이예요.</p>`;
+            <p class="note" id="hip-fact" hidden>히파르코스는 <b class="key-gold">가장 밝은 별</b>을 <b class="key-gold">1등성</b>, 맨눈으로 <b class="key-gold">겨우 보이는 별</b>을 <b class="key-gold">6등성</b>으로 나누었어요. 오늘날 측정해 보니 <b class="key-gold">1등성은 6등성보다 약 100배</b> 밝았어요. 지금은 이를 바탕으로 별의 밝기를 '등급'으로 나타내며, <b class="key-gold">1등급 차이</b>는 <b class="key-gold">약 2.5배</b> 밝기 차이예요.</p>`;
         spots.forEach(([x, y, g]) => {
             const s = drawStar(svg, x, y, g);
             const hit = svgEl('circle', { cx: 0, cy: 0, r: 30, fill: 'transparent', style: 'cursor:pointer' }, s);
