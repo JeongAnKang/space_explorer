@@ -1,4 +1,4 @@
-// 퀘스트 1 · 미션 2 밝기 — s1 히파르코스 등급, s2 겉보기 등급과 절대 등급, s3 밝기와 거리, 내용정리
+// 퀘스트 1 · 미션 2 밝기 — s1 히파르코스 별의 밝기(등성), s2 겉보기 등급과 절대 등급, s3 밝기와 거리, 내용정리
 (function () {
     const { svgEl, layout, text } = SimKit;
 
@@ -12,17 +12,17 @@
         return g;
     }
 
-    // ---------- 단계 1: 히파르코스의 등급 ----------
+    // ---------- 단계 1: 히파르코스 별의 밝기 (등성) ----------
     function hipparchus(body, api) {
-        body.insertAdjacentHTML('beforeend', '<p class="lead">약 2,100년 전 그리스의 히파르코스는 맨눈에 보이는 별을 밝기에 따라 나누었어요. 밤하늘의 별을 <b>가장 밝은 별부터 차례로</b> 눌러 등급을 매겨 보세요.</p>');
+        body.insertAdjacentHTML('beforeend', '<p class="lead">약 2,100년 전 그리스의 히파르코스는 맨눈에 보이는 별을 밝기에 따라 나누었어요. 밤하늘의 별을 <b>가장 밝은 별부터 차례로</b> 눌러 1등성부터 6등성까지 나누어 보세요.</p>');
         const { view, ctrl } = layout(body);
         const W = 640, H = 360;
         const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': '밝기가 다른 별 여섯 개' }, view);
         const spots = [[120, 250, 3], [470, 90, 1], [300, 160, 5], [540, 270, 2], [210, 70, 6], [380, 300, 4]];
         let next = 1;
-        ctrl.innerHTML = `<div class="readout" id="hip-list"><div class="row"><span>다음에 누를 별</span><b id="hip-next">1등급</b></div></div>
-            <p class="note" id="hip-fact" hidden>히파르코스는 가장 밝은 별을 1등급, 맨눈으로 겨우 보이는 별을 6등급으로 정했어요. 오늘날 측정해 보니 <b>1등급 별은 6등급 별보다 약 100배</b> 밝고, 1등급 차이는 약 2.5배 밝기 차이예요.</p>
-            <table class="data-table" id="hip-table" hidden><tr><th>등급</th><th>6등급과 비교한 밝기</th></tr></table>`;
+        ctrl.innerHTML = `<div class="readout" id="hip-list"><div class="row"><span>다음에 누를 별</span><b id="hip-next">1등성</b></div></div>
+            <p class="note" id="hip-fact" hidden>히파르코스는 가장 밝은 별을 1등성, 맨눈으로 겨우 보이는 별을 6등성으로 나누었어요. 오늘날 측정해 보니 <b>1등성은 6등성보다 약 100배</b> 밝았어요. 지금은 이를 바탕으로 별의 밝기를 '등급'으로 나타내며, 1등급 차이는 약 2.5배 밝기 차이예요.</p>
+            <table class="data-table" id="hip-table" hidden><tr><th>등성</th><th>6등성과 비교한 밝기</th></tr></table>`;
         spots.forEach(([x, y, g]) => {
             const s = drawStar(svg, x, y, g);
             const hit = svgEl('circle', { cx: 0, cy: 0, r: 30, fill: 'transparent', style: 'cursor:pointer' }, s);
@@ -30,22 +30,22 @@
                 if (s.dataset.done) return;
                 if (g !== next) { toast('남은 별 중에 더 밝은 별이 있어요.'); return; }
                 s.dataset.done = '1';
-                text(svg, x, y + starLook(g).r + 22, `${g}등급`, { 'text-anchor': 'middle', fill: '#f5c451', 'font-size': 15, 'font-weight': 700 });
+                text(svg, x, y + starLook(g).r + 22, `${g}등성`, { 'text-anchor': 'middle', fill: '#f5c451', 'font-size': 15, 'font-weight': 700 });
                 next++;
-                ctrl.querySelector('#hip-next').textContent = next <= 6 ? `${next}등급` : '모두 완료';
+                ctrl.querySelector('#hip-next').textContent = next <= 6 ? `${next}등성` : '모두 완료';
                 if (next > 6) {
                     ctrl.querySelector('#hip-fact').hidden = false;
                     const t = ctrl.querySelector('#hip-table'); t.hidden = false;
-                    for (let k = 1; k <= 6; k++) t.insertAdjacentHTML('beforeend', `<tr><td>${k}등급</td><td class="num">약 ${Math.round(Math.pow(2.512, 6 - k))}배</td></tr>`);
+                    for (let k = 1; k <= 6; k++) t.insertAdjacentHTML('beforeend', `<tr><td>${k}등성</td><td class="num">약 ${Math.round(Math.pow(2.512, 6 - k))}배</td></tr>`);
                     quizBox.hidden = false;
                 }
             });
         });
         const holder = document.createElement('div'); body.appendChild(holder);
         const quizBox = api.quiz(holder, {
-            q: '1등급 별은 6등급 별보다 약 몇 배 밝을까요?',
+            q: '1등성은 6등성보다 약 몇 배 밝을까요?',
             options: ['약 6배', '약 2.5배', '약 100배'], answer: 2,
-            explain: '맞아요. 등급이 5 차이 나면 밝기는 100배 차이가 나요. 등급의 숫자가 작을수록 밝은 별이에요.',
+            explain: '맞아요. 1등성은 6등성보다 약 100배 밝아요. 숫자가 작을수록 밝은 별이에요.',
             hint: '오른쪽 표를 다시 살펴보세요.'
         });
         quizBox.hidden = true;
@@ -172,19 +172,19 @@
         body.insertAdjacentHTML('beforeend', '<p class="lead">카드를 빈칸에 놓고 [확인]을 누르세요.</p>');
         Activities.fill(body, {
             lines: [
-                '히파르코스는 맨눈에 보이는 별을 밝기에 따라 1등급부터 [[6등급]]까지 나누었다.',
+                '히파르코스는 맨눈에 보이는 별을 밝기에 따라 1등성부터 [[6등성]]까지 나누었다.',
                 '등급의 숫자가 작을수록 [[밝은]] 별이며, 1등급 별은 6등급 별보다 약 [[100배]] 밝다.',
                 '별을 [[10 pc]] 거리에 두었다고 가정했을 때의 등급을 절대 등급이라고 한다.',
                 '별의 실제 밝기를 비교할 때는 [[절대 등급]]을 사용한다.',
                 '별의 밝기는 거리의 제곱에 [[반비례]]한다.'
             ],
-            extras: ['어두운', '10배', '1 pc', '겉보기 등급', '비례'],
+            extras: ['7등성', '어두운', '10배', '1 pc', '겉보기 등급', '비례'],
             onSolved: () => api.completeMission()
         });
     }
 
     SIMS['1_2'] = { steps: [
-        { title: '히파르코스의 등급', short: '히파르코스 등급', build: hipparchus },
+        { title: '히파르코스 별의 밝기', short: '히파르코스 별의 밝기', build: hipparchus },
         { title: '겉보기 등급과 절대 등급', short: '겉보기·절대 등급', build: apparentAbsolute },
         { title: '밝기와 거리', short: '밝기와 거리', build: brightnessDistance },
         { title: '내용정리', short: '내용정리', build: summary }
