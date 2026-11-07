@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>우주 탐사대</title>
+    <meta name="claude:viewport-fit-sides" content="cover">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Ccircle cx=%228%22 cy=%228%22 r=%226%22 fill=%22%23f5c451%22/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="main-wrap">
+        <header class="hero">
+            <canvas id="sky" aria-hidden="true"></canvas>
+            <div class="eyebrow">별과 우주 단원</div>
+            <h1>우주 탐사대</h1>
+            <p>별까지의 거리를 재고, 별의 밝기와 온도를 비교하고, 우리은하를 지나 팽창하는 우주까지 탐사해 봅시다. 미션을 하나 마칠 때마다 이곳으로 돌아와 탐사 기록을 확인하세요.</p>
+        </header>
+
+        <section class="progress-card" aria-label="단원 진행률">
+            <div class="big num"><span id="done-count">0</span><small> / <span id="total-count">7</span></small></div>
+            <div>
+                <div class="track" role="progressbar" aria-label="완료한 미션" aria-valuemin="0" id="unit-bar"><span id="unit-fill" style="width:0%"></span></div>
+                <div class="caption" id="unit-caption">아직 시작하지 않았어요. 퀘스트 1의 미션 1부터 출발해 보세요.</div>
+            </div>
+        </section>
+
+        <section class="quests" id="quests" aria-label="퀘스트"></section>
+
+        <section class="badges" aria-labelledby="badge-title">
+            <h2 id="badge-title">탐사 배지</h2>
+            <div class="badge-grid" id="badge-grid"></div>
+            <p class="teacher-note">진행 기록은 이 기기의 브라우저에만 저장돼요. 다른 기기에서 열면 처음부터 시작해요.</p>
+        </section>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script>
+        (function () {
+            const PLANET = { 1: 'star-q', 2: 'space-q' };
+            const BLURB = { 1: '거리, 밝기, 온도로 별을 알아봐요.', 2: '우리은하에서 팽창하는 우주, 우주탐사까지.' };
+
+            function render() {
+                const total = totalMissions(), done = completedCount();
+                document.getElementById('done-count').textContent = done;
+                document.getElementById('total-count').textContent = total;
+                const pct = Math.round((done / total) * 100);
+                document.getElementById('unit-fill').style.width = pct + '%';
+                const bar = document.getElementById('unit-bar');
+                bar.setAttribute('aria-valuemax', total); bar.setAttribute('aria-valuenow', done);
+                document.getElementById('unit-caption').textContent =
+                    done === 0 ? '아직 시작하지 않았어요. 퀘스트 1의 미션 1부터 출발해 보세요.'
+                    : done === total ? '단원의 모든 미션을 클리어했어요. 훌륭한 탐사였어요!'
+                    : `단원의 ${pct}%를 클리어했어요. 남은 미션 ${total - done}개.`;
+
+                const wrap = document.getElementById('quests');
+                wrap.innerHTML = '';
+                Object.entries(QUESTS).forEach(([q, quest]) => {
+                    q = parseInt(q, 10);
+                    const open = canAccessQuest(q).access;
+                    const n = quest.missions.filter(m => isMissionCompleted(q, m.id)).length;
+                    const card = document.createElement('article');
+                    card.className = 'quest-card' + (open ? '' : ' locked');
+                    card.innerHTML = `<div class="quest-head">
+                            <button type="button" class="planet ${PLANET[q]}" aria-label="퀘스트 ${q} ${quest.name} 들어가기"></button>
+                            <div><div class="meta">QUEST ${q} · 미션 ${n}/${quest.missions.length} 완료</div><h2>${quest.name}</h2><div class="meta">${BLURB[q]}</div></div>
+                        </div>
+                        <div class="quest-missions"></div>`;
+                    card.querySelector('.planet').addEventListener('click', () => {
+                        if (!open) { toast(lockMessage(q, 1)); return; }
+                        location.href = quest.page;
+                    });
+                    const list = card.querySelector('.quest-missions');
+                    quest.missions.forEach(m => {
+                        const state = missionState(q, m.id);
+                        const row = document.createElement(state === 'locked' ? 'button' : 'a');
+                        row.className = `m-row ${state}`;
+                        if (state === 'locked') { row.type = 'button'; row.addEventListener('click', () => toast(lockMessage(q, m.id))); }
+                        else row.href = `${quest.page}#m${m.id}`;
+                        row.innerHTML = `<span class="dot" aria-hidden="true"></span><span class="m-no">MISSION ${m.id}</span><span class="m-name">${m.title}</span><span class="m-state">${STATE_LABEL[state]}</span>`;
+                        list.appendChild(row);
+                    });
+                    wrap.appendChild(card);
+                });
+
+                const grid = document.getElementById('badge-grid');
+                grid.innerHTML = '';
+                Object.entries(QUESTS).forEach(([q, quest]) => quest.missions.forEach(m => {
+                    const got = isMissionCompleted(q, m.id);
+                    const b = document.createElement('div');
+                    b.className = 'badge' + (got ? ' got' : '');
+                    b.innerHTML = `<div class="medal num">${q}-${m.id}</div><div>${m.title}</div>`;
+                    b.setAttribute('aria-label', `${m.title} 배지 ${got ? '획득' : '미획득'}`);
+                    grid.appendChild(b);
+                }));
+            }
+
+            drawStarfield(document.getElementById('sky'));
+            render();
+            // 퀘스트 화면에서 뒤로 가기로 돌아온 경우에도 최신 진행도로 다시 그림
+            window.addEventListener('pageshow', render);
+        })();
+    </script>
+</body>
+</html>
