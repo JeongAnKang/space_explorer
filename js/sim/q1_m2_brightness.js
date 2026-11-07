@@ -2,19 +2,33 @@
 (function () {
     const { svgEl, layout, text } = SimKit;
 
-    // 등급 → 그림 속 별 크기·밝기 (등급이 작을수록 크고 밝게)
-    const starLook = m => ({ r: Math.max(2, 3 + (6 - m) * 1.9), glow: Math.max(.15, Math.min(1, .25 + (6 - m) * .15)) });
+    // 등급(등성) → 그림 속 별의 밝기. 별의 크기는 모두 같고, 빛의 세기와 번짐만 달라짐
+    // (등급이 1 작아질 때마다 한 단계씩 밝게. 맨눈으로 보는 별처럼 점으로 표현)
+    const starLook = m => {
+        const flux = Math.pow(2.512, -(m - 1));                      // 1등성(1등급)을 1로 한 실제 밝기 비
+        return {
+            r: 3,                                                    // 별 자체 크기는 고정
+            core: Math.max(.1, Math.min(1, Math.pow(flux, .5))),      // 눈에 보이는 빛의 세기: 1, .63, .40, .25, .16, .10
+            glow: Math.min(1.6, Math.pow(flux, .7)),                  // 주변으로 번지는 빛
+            rays: flux >= .9                                         // 아주 밝은 별만 빛줄기
+        };
+    };
     function drawStar(parent, x, y, m, color = '#fff6dc') {
         const g = svgEl('g', { transform: `translate(${x} ${y})` }, parent);
-        const { r, glow } = starLook(m);
-        svgEl('circle', { r: r * 2.6, fill: color, opacity: glow * .25 }, g);
-        svgEl('circle', { r, fill: color }, g);
+        const { r, core, glow, rays } = starLook(m);
+        svgEl('circle', { r: 16, fill: color, opacity: Math.min(1, glow) * .14 }, g);
+        svgEl('circle', { r: 8, fill: color, opacity: Math.min(1, glow) * .32 }, g);
+        if (rays) {
+            const L = 8 + glow * 8;
+            svgEl('path', { d: `M${-L} 0H${L}M0 ${-L}V${L}`, stroke: color, 'stroke-width': 1, opacity: .75 }, g);
+        }
+        svgEl('circle', { r, fill: color, opacity: core }, g);
         return g;
     }
 
     // ---------- 단계 1: 히파르코스 별의 밝기 (등성) ----------
     function hipparchus(body, api) {
-        body.insertAdjacentHTML('beforeend', '<p class="lead">약 2,100년 전 그리스의 히파르코스는 맨눈에 보이는 별을 밝기에 따라 나누었어요. 밤하늘의 별을 <b>가장 밝은 별부터 차례로</b> 눌러 1등성부터 6등성까지 나누어 보세요.</p>');
+        body.insertAdjacentHTML('beforeend', '<p class="lead">약 2,100년 전 그리스의 히파르코스는 맨눈에 보이는 별을 밝기에 따라 나누었어요. 밤하늘의 별을 <b>가장 밝은 별부터 차례로</b> 눌러 1등성부터 6등성까지 나누어 보세요. 별의 크기가 아니라 <b>빛의 밝기</b>를 비교해요.</p>');
         const { view, ctrl } = layout(body);
         const W = 640, H = 360;
         const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': '밝기가 다른 별 여섯 개' }, view);
@@ -30,7 +44,7 @@
                 if (s.dataset.done) return;
                 if (g !== next) { toast('남은 별 중에 더 밝은 별이 있어요.'); return; }
                 s.dataset.done = '1';
-                text(svg, x, y + starLook(g).r + 22, `${g}등성`, { 'text-anchor': 'middle', fill: '#f5c451', 'font-size': 15, 'font-weight': 700 });
+                text(svg, x, y + 34, `${g}등성`, { 'text-anchor': 'middle', fill: '#f5c451', 'font-size': 15, 'font-weight': 700 });
                 next++;
                 ctrl.querySelector('#hip-next').textContent = next <= 6 ? `${next}등성` : '모두 완료';
                 if (next > 6) {
