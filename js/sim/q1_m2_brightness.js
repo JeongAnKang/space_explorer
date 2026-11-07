@@ -177,9 +177,9 @@
         const { view, ctrl } = layout(body);
         // 광원을 가운데 두고 빛이 구면으로 퍼지는 모습을 아래쪽 반구(그릇 모양)로 표현
         // 위에서 비스듬히 내려다본 모습: 반구 안쪽 바닥에 빛 다발이 닿는 넓이 = d × d 칸, 한 칸의 밝기 = 1/d²
-        const W = 640, H = 350, CX = 290, CY = 80, U = 60, TAN = .25;
+        const W = 640, H = 290, CX = 290, CY = 70, U = 60, TAN = .25;
         const SIN = .3;                                            // 시점: 낮을수록 광원이 있는 단면(입구 타원)이 납작하게 보임
-        const COS = 1.3;                                           // 옆면 높이 (이전 0.87의 1.5배)
+        const COS = Math.sqrt(1 - SIN * SIN);                      // 구의 바깥 윤곽은 항상 원(반지름 R)
         const CELL = 2 * U * TAN;                                   // 한 칸의 크기는 거리와 상관없이 같음
         const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': '광원에서 반구 모양으로 퍼지는 빛과 거리에 따라 넓어지는 면적' }, view);
         const defs = svgEl('defs', {}, svg);
@@ -187,7 +187,7 @@
         svgEl('stop', { offset: '0%', 'stop-color': '#fffbe6' }, src);
         svgEl('stop', { offset: '30%', 'stop-color': '#f5c451', 'stop-opacity': .9 }, src);
         svgEl('stop', { offset: '100%', 'stop-color': '#f5c451', 'stop-opacity': 0 }, src);
-        const bowlG = svgEl('radialGradient', { id: 'bdBowl', cx: '50%', cy: '20%', r: '80%' }, defs);
+        const bowlG = svgEl('radialGradient', { id: 'bdBowl', cx: '42%', cy: '28%', r: '75%' }, defs);
         svgEl('stop', { offset: '0%', 'stop-color': '#f5c451', 'stop-opacity': .2 }, bowlG);
         svgEl('stop', { offset: '60%', 'stop-color': '#f5c451', 'stop-opacity': .07 }, bowlG);
         svgEl('stop', { offset: '100%', 'stop-color': '#f5c451', 'stop-opacity': .02 }, bowlG);
@@ -214,20 +214,24 @@
             [3, 2, 1].forEach(k => {
                 const on = k === r, R = U * k;
                 // 그릇 안쪽 면 (아래쪽 반원 + 뒤쪽 입구)
-                svgEl('path', { d: `M${CX - R} ${CY} A${R} ${R * COS} 0 0 0 ${CX + R} ${CY} A${R} ${ry(k)} 0 0 0 ${CX - R} ${CY} Z`,
+                svgEl('path', { d: `M${CX - R} ${CY} A${R} ${R} 0 0 0 ${CX + R} ${CY} A${R} ${ry(k)} 0 0 0 ${CX - R} ${CY} Z`,
                     fill: on ? 'url(#bdBowl)' : 'none' }, scene);
                 // 뒤쪽 입구 테두리 (실선)
                 svgEl('path', { d: `M${CX - R} ${CY} A${R} ${ry(k)} 0 0 1 ${CX + R} ${CY}`, fill: 'none', stroke: '#f5c451',
                     'stroke-width': on ? 2 : 1, 'stroke-opacity': on ? .85 : .25 }, scene);
                 // 그릇 바깥선 (아래쪽 반원)
-                svgEl('path', { d: `M${CX - R} ${CY} A${R} ${R * COS} 0 0 0 ${CX + R} ${CY}`, fill: 'none', stroke: '#f5c451',
+                svgEl('path', { d: `M${CX - R} ${CY} A${R} ${R} 0 0 0 ${CX + R} ${CY}`, fill: 'none', stroke: '#f5c451',
                     'stroke-width': on ? 2.5 : 1, 'stroke-opacity': on ? .95 : .3, 'stroke-dasharray': on ? '' : '5 6' }, scene);
                 // 앞쪽 입구 테두리
                 svgEl('path', { d: `M${CX + R} ${CY} A${R} ${ry(k)} 0 0 1 ${CX - R} ${CY}`, fill: 'none', stroke: '#f5c451',
                     'stroke-width': on ? 2 : 1, 'stroke-opacity': on ? .85 : .25 }, scene);
-                // 반구의 둥근 느낌: 가운데 세로 경선
-                svgEl('path', { d: `M${CX} ${CY + ry(k)} A${R * .35} ${R * COS} 0 0 0 ${CX} ${CY + R * COS}`, fill: 'none', stroke: '#f5c451', 'stroke-opacity': on ? .28 : .1, 'stroke-dasharray': '3 5' }, scene);
-                const lab = text(scene, CX + R * .8 + 10, CY + R * COS * .6 + 4, `거리 ${k}`, { fill: on ? '#f5c451' : '#6f78a8', 'font-weight': on ? 800 : 600, style: 'cursor:pointer' });
+                // 구의 둥근 느낌: 위도선(가로 고리) 두 줄. 앞쪽은 실선, 뒤쪽은 점선
+                if (on) [30, 60].forEach(deg => {
+                    const t = deg * Math.PI / 180, rr = R * Math.cos(t), yc = CY + R * Math.sin(t) * COS, rv = rr * SIN;
+                    svgEl('path', { d: `M${CX - rr} ${yc} A${rr} ${rv} 0 0 1 ${CX + rr} ${yc}`, fill: 'none', stroke: '#f5c451', 'stroke-opacity': .22, 'stroke-dasharray': '3 5' }, scene);
+                    svgEl('path', { d: `M${CX + rr} ${yc} A${rr} ${rv} 0 0 1 ${CX - rr} ${yc}`, fill: 'none', stroke: '#f5c451', 'stroke-opacity': .4 }, scene);
+                });
+                const lab = text(scene, CX + R * .8 + 10, CY + R * .6 + 4, `거리 ${k}`, { fill: on ? '#f5c451' : '#6f78a8', 'font-weight': on ? 800 : 600, style: 'cursor:pointer' });
                 lab.addEventListener('click', () => select(k));
             });
             // 바닥에 닿는 사각형의 네 모서리 (거리 k의 반구 바닥, 넓이 k×k 칸)
