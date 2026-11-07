@@ -163,9 +163,9 @@
         ctrl.querySelector('#to-10').addEventListener('click', () => { slider.value = 10; draw(); });
         slider.addEventListener('input', draw);
         draw();
-        // 탐구 질문 1, 2를 모두 해결해야 다음 단계가 열림
-        const solved = { q1: false, q2: false };
-        const check = key => { solved[key] = true; if (solved.q1 && solved.q2) api.done(); };
+        // 탐구 질문 1, 2, 3을 모두 해결해야 다음 단계가 열림
+        const solved = { q1: false, q2: false, q3: false };
+        const check = key => { solved[key] = true; if (solved.q1 && solved.q2 && solved.q3) api.done(); };
         api.quiz(body, {
             label: '탐구 질문 1', keepStepOpen: true, onRight: () => check('q1'),
             q: '세 별 중 실제로 가장 밝은(빛을 가장 많이 내는) 별은 어느 것일까요?',
@@ -186,6 +186,51 @@
                 '3) 겉보기 등급과 절대 등급이 같은 별 → 거리지수 = 0 : [[10 pc에]] 있는 별'
             ],
             onSolved: () => check('q2')
+        });
+        // 탐구 질문 3: 그래프의 별 A~D를 10 pc 기준으로 분류
+        const GRAPH_STARS = [{ id: 'A', M: -10, m: -5 }, { id: 'B', M: -5, m: 5 }, { id: 'C', M: 0, m: 0 }, { id: 'D', M: 5, m: -10 }];
+        const q3 = document.createElement('div');
+        q3.className = 'quiz';
+        q3.innerHTML = `<div class="q"><span class="q-label">탐구 질문 3</span>그래프는 몇 개의 별의 겉보기 등급과 절대 등급이에요. 별까지의 거리를 10 pc를 기준으로 분류해 보세요.</div>`;
+        body.appendChild(q3);
+        const gw = document.createElement('div');
+        gw.style.cssText = 'max-width:420px;width:100%;margin:0 auto';
+        q3.appendChild(gw);
+        const GW = 400, GH = 330, gx = v => 70 + (v + 12) * (300 / 24), gy = v => 20 + (12 - v) * (260 / 24);
+        const g = svgEl('svg', { viewBox: `0 0 ${GW} ${GH}`, role: 'img', 'aria-label': '별 A, B, C, D의 절대 등급과 겉보기 등급 그래프' }, gw);
+        svgEl('rect', { x: gx(-12), y: gy(12), width: gx(12) - gx(-12), height: gy(-12) - gy(12), fill: 'none' }, g);
+        [-10, -5, 5, 10].forEach(v => {
+            svgEl('line', { x1: gx(v), y1: gy(-12), x2: gx(v), y2: gy(12), stroke: '#2f3b78', 'stroke-dasharray': '2 4' }, g);
+            svgEl('line', { x1: gx(-12), y1: gy(v), x2: gx(12), y2: gy(v), stroke: '#2f3b78', 'stroke-dasharray': '2 4' }, g);
+        });
+        // 축 (아래쪽 가로축: 절대 등급, 왼쪽 세로축: 겉보기 등급)
+        svgEl('line', { x1: gx(-12), y1: gy(-12), x2: gx(12.5), y2: gy(-12), stroke: '#a9b1d9', 'stroke-width': 1.5 }, g);
+        svgEl('line', { x1: gx(-12), y1: gy(-12), x2: gx(-12), y2: gy(12.5), stroke: '#a9b1d9', 'stroke-width': 1.5 }, g);
+        [-10, -5, 0, 5, 10].forEach(v => {
+            text(g, gx(v), gy(-12) + 20, String(v), { 'text-anchor': 'middle', 'font-size': 13 });
+            text(g, gx(-12) - 8, gy(v) + 4, String(v), { 'text-anchor': 'end', 'font-size': 13 });
+        });
+        text(g, gx(12), gy(-12) + 40, '절대 등급', { 'text-anchor': 'end', fill: '#eef1ff', 'font-weight': 700 });
+        text(g, 16, gy(0), '겉보기 등급', { 'text-anchor': 'middle', fill: '#eef1ff', 'font-weight': 700, transform: `rotate(-90 16 ${gy(0)})` });
+        // 정답 뒤에 보여 줄 기준선: 겉보기 등급 = 절대 등급 (10 pc)
+        const eqLine = svgEl('g', { style: 'display:none' }, g);
+        svgEl('line', { x1: gx(-12), y1: gy(-12), x2: gx(12), y2: gy(12), stroke: '#4fd1b5', 'stroke-width': 1.5, 'stroke-dasharray': '6 5' }, eqLine);
+        text(eqLine, gx(4), gy(9.5), '거리지수 = 0 (10 pc)', { fill: '#4fd1b5', 'font-weight': 700, 'font-size': 12, 'text-anchor': 'end' });
+        GRAPH_STARS.forEach(st => {
+            svgEl('circle', { cx: gx(st.M), cy: gy(st.m), r: 6, fill: '#f5c451' }, g);
+            text(g, gx(st.M) + 9, gy(st.m) - 8, st.id, { fill: '#eef1ff', 'font-weight': 800, 'font-size': 16 });
+        });
+        Activities.classify(q3, {
+            bins: [{ id: 'near', name: '10 pc보다 가까이 있는 별' }, { id: 'at', name: '10 pc에 있는 별' }, { id: 'far', name: '10 pc보다 멀리 있는 별' }],
+            items: [{ label: 'A', bin: 'far' }, { label: 'B', bin: 'far' }, { label: 'C', bin: 'at' }, { label: 'D', bin: 'near' }],
+            onSolved: () => {
+                eqLine.style.display = '';
+                const note = document.createElement('p');
+                note.className = 'feedback ok';
+                note.textContent = '맞아요. 거리지수(겉보기 등급 − 절대 등급)가 A는 +5, B는 +10이라 10 pc보다 멀리, C는 0이라 10 pc에, D는 −15라 10 pc보다 가까이 있어요. 초록 점선 위의 별은 10 pc에 있어요.';
+                q3.appendChild(note);
+                check('q3');
+            }
         });
     }
 

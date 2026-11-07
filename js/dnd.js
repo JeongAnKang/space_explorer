@@ -83,7 +83,10 @@
                 d.over && d.over.classList.remove('over');
                 place(d.chip, zoneAt(e.clientX, e.clientY));
             } else {
-                // 그냥 누른 경우: 카드 선택 / 선택 해제
+                // 그냥 누른 경우: 다른 카드를 고른 상태에서 상자·빈칸 속 카드를 누르면 → 고른 카드를 그곳에 놓음
+                const zone = d.chip.parentElement && d.chip.parentElement.closest('.slot, .bin');
+                if (selected && selected !== d.chip && zone && root.contains(zone)) { place(selected, zone); select(null); return; }
+                // 그 밖에는 카드 선택 / 선택 해제
                 select(selected === d.chip ? null : d.chip);
             }
         };
