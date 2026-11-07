@@ -104,7 +104,7 @@
     const mag = (M, d) => M + 5 * Math.log10(d / 10);
 
     function apparentAbsolute(body, api) {
-        body.insertAdjacentHTML('beforeend', '<p class="lead">우리 눈에 보이는 밝기는 별까지의 거리에 따라 달라요. 지구에서 보이는 밝기를 <b>겉보기 등급</b>, 모든 별을 <b>10 pc</b> 거리에 두었다고 가정한 밝기를 <b>절대 등급</b>이라고 해요. 별을 골라 10 pc 위치로 옮겨 보세요.</p>');
+        body.insertAdjacentHTML('beforeend', '<p class="lead">우리 눈에 보이는 밝기는 별까지의 거리에 따라 달라요. <b class="key-gold">지구에서 보이는 밝기</b>를 <b class="key-gold">겉보기 등급</b>, 모든 별을 <b class="key-gold">10 pc 거리에 두었다고 가정한 밝기</b>를 <b class="key-gold">절대 등급</b>이라고 해요. 별을 골라 10 pc 위치로 옮겨 보세요.</p>');
         const { view, ctrl } = layout(body);
         const W = 640, H = 300, X0 = 60, PX = 13.5, AY = 220;
         const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': '별까지의 거리와 밝기' }, view);
