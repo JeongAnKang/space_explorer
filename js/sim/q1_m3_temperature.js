@@ -1,4 +1,4 @@
-// 퀘스트 1 · 미션 3 온도 — 별의 색과 표면 온도, 내용정리
+// 퀘스트 1 · 미션 3 온도 — s1 오리온자리 별의 색 관측, s2 별의 색과 표면 온도, 내용정리
 (function () {
     const { svgEl, layout, text } = SimKit;
 
@@ -25,6 +25,74 @@
         { name: '알데바란', K: 3900 }, { name: '베텔게우스', K: 3500 }
     ];
 
+    // ---------- 단계 1: 오리온자리 별의 색 관측 ----------
+    // 실제 위치(적경·적위)를 바탕으로 그린 오리온자리. 밤하늘처럼 동쪽이 왼쪽
+    const ORION = [
+        { id: 'betelgeuse', name: '베텔게우스', ra: 88.8, dec: 7.4, mag: 0.5, color: '#ff7a45', colorName: '붉은색', key: true },
+        { id: 'rigel', name: '리겔', ra: 78.6, dec: -8.2, mag: 0.1, color: '#a8c8ff', colorName: '청백색', key: true },
+        { id: 'bellatrix', name: '벨라트릭스', ra: 81.3, dec: 6.3, mag: 1.6, color: '#bcd0ff', colorName: '청백색' },
+        { id: 'saiph', name: '사이프', ra: 86.9, dec: -9.7, mag: 2.1, color: '#bcd0ff', colorName: '청백색' },
+        { id: 'alnitak', name: '알니탁', ra: 85.2, dec: -1.9, mag: 1.8, color: '#bcd0ff', colorName: '청백색' },
+        { id: 'alnilam', name: '알닐람', ra: 84.05, dec: -1.2, mag: 1.7, color: '#bcd0ff', colorName: '청백색' },
+        { id: 'mintaka', name: '민타카', ra: 83.0, dec: -0.3, mag: 2.2, color: '#bcd0ff', colorName: '청백색' },
+        { id: 'meissa', name: '메이사', ra: 83.8, dec: 9.9, mag: 3.4, color: '#c8d6ff', colorName: '청백색' }
+    ];
+    const ORION_LINES = [['meissa', 'betelgeuse'], ['meissa', 'bellatrix'], ['betelgeuse', 'bellatrix'], ['betelgeuse', 'alnitak'], ['bellatrix', 'mintaka'],
+        ['mintaka', 'alnilam'], ['alnilam', 'alnitak'], ['alnitak', 'saiph'], ['mintaka', 'rigel']];
+
+    function orion(body, api) {
+        body.insertAdjacentHTML('beforeend', '<p class="lead">겨울철 남쪽 하늘의 <b>오리온자리</b>를 관측해 보세요. 왼쪽 위의 <b class="key-gold">베텔게우스</b>와 오른쪽 아래의 <b class="key-gold">리겔</b>은 둘 다 아주 밝은 별이지만 <b>색이 서로 달라요</b>. 별을 눌러 색을 확인해 보세요.</p>');
+        const { view, ctrl } = layout(body);
+        const W = 640, H = 430;
+        const K = 18, X = ra => 320 + (84.4 - ra) * K, Y = dec => 212 - dec * K;   // 가로·세로 같은 비율
+        const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': '오리온자리: 붉은색 베텔게우스와 청백색 리겔' }, view);
+        const defs = svgEl('defs', {}, svg);
+        // 배경의 희미한 별
+        let seed = 17; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+        for (let i = 0; i < 90; i++) svgEl('circle', { cx: rnd() * W, cy: rnd() * H, r: rnd() * 1.1 + .3, fill: '#dfe6ff', opacity: .25 + rnd() * .4 }, svg);
+        const lines = svgEl('g', { stroke: '#8fb4ff', 'stroke-opacity': .35, 'stroke-width': 1.5 }, svg);
+        const pos = id => { const st = ORION.find(x => x.id === id); return [X(st.ra), Y(st.dec)]; };
+        ORION_LINES.forEach(([a, b]) => { const p = pos(a), q = pos(b); svgEl('line', { x1: p[0], y1: p[1], x2: q[0], y2: q[1] }, lines); });
+        const ring = svgEl('circle', { r: 26, fill: 'none', stroke: '#f5c451', 'stroke-width': 2, style: 'display:none' }, svg);
+        ctrl.innerHTML = `
+            <div class="readout">
+                <div class="row"><span>별 이름</span><b id="or-name">별을 눌러 보세요</b></div>
+                <div class="row"><span>보이는 색</span><b id="or-color">—</b></div>
+            </div>
+            <label style="display:flex;gap:10px;align-items:center;min-height:44px"><input type="checkbox" id="or-lines" checked style="width:22px;height:22px"> 별자리 선 보기</label>
+            <p class="note">별의 색이 다른 까닭은 다음 단계에서 알아봐요.</p>`;
+        const seen = new Set();
+        ORION.forEach(st => {
+            const x = X(st.ra), y = Y(st.dec), core = Math.max(2.2, 6.5 - st.mag * 1.3);
+            const gid = `or-${st.id}`;
+            const gr = svgEl('radialGradient', { id: gid }, defs);
+            svgEl('stop', { offset: '0%', 'stop-color': st.color, 'stop-opacity': .75 }, gr);
+            svgEl('stop', { offset: '100%', 'stop-color': st.color, 'stop-opacity': 0 }, gr);
+            const g = svgEl('g', { style: 'cursor:pointer;outline:none', tabindex: 0, role: 'button', 'aria-label': st.name }, svg);
+            svgEl('circle', { cx: x, cy: y, r: core * 4, fill: `url(#${gid})` }, g);
+            svgEl('circle', { cx: x, cy: y, r: core, fill: st.color }, g);
+            svgEl('circle', { cx: x, cy: y, r: 24, fill: 'transparent' }, g);
+            if (st.key) text(svg, x + (st.id === 'rigel' ? 30 : -28), y + (st.id === 'rigel' ? 6 : -20), st.name, { 'text-anchor': st.id === 'rigel' ? 'start' : 'end', fill: st.color, 'font-weight': 800, 'font-size': 15 });
+            const show = () => {
+                ring.style.display = ''; ring.setAttribute('cx', x); ring.setAttribute('cy', y);
+                ctrl.querySelector('#or-name').textContent = st.name;
+                const c = ctrl.querySelector('#or-color');
+                c.textContent = st.colorName; c.style.color = st.color;
+                seen.add(st.id);
+            };
+            g.addEventListener('click', show);
+            g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); show(); } });
+        });
+        ctrl.querySelector('#or-lines').addEventListener('change', e => { lines.style.display = e.target.checked ? '' : 'none'; });
+        api.quiz(body, {
+            q: '오리온자리의 베텔게우스와 리겔은 각각 어떤 색으로 보이나요?',
+            options: ['베텔게우스: 청백색, 리겔: 붉은색', '베텔게우스: 붉은색, 리겔: 청백색', '둘 다 노란색'], answer: 1,
+            explain: '맞아요. 베텔게우스는 붉은색, 리겔은 청백색으로 보여요. 별마다 색이 다른 까닭을 다음 단계에서 알아봐요.',
+            hint: '그림에서 베텔게우스와 리겔을 눌러 색을 확인해 보세요.'
+        });
+    }
+
+    // ---------- 단계 2: 별의 색과 표면 온도 ----------
     function starColor(body, api) {
         body.insertAdjacentHTML('beforeend', '<p class="lead">별은 표면 온도에 따라 색이 달라요. 표면 온도를 바꾸며 별의 색이 어떻게 변하는지 관찰해 보세요.</p>');
         const { view, ctrl } = layout(body);
@@ -99,7 +167,8 @@
     }
 
     SIMS['1_3'] = { steps: [
-        { title: '별의 색과 표면 온도', short: '별의 색과 온도', build: starColor },
+        { title: '오리온자리 별의 색 관측', short: '오리온자리 관측', build: orion },
+        { title: '별의 색과 표면 온도', short: '별의 색과 표면 온도', build: starColor },
         { title: '내용정리', short: '내용정리', build: summary }
     ] };
 })();
