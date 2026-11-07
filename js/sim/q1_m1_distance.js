@@ -246,9 +246,9 @@
                 <button type="button" data-pos="0" aria-pressed="false">7월 위치</button>
             </div></div>
             <div class="readout">
-                <div class="row"><span>연주시차</span><b id="p-out"></b></div>
-                <div class="row"><span>6개월 간격 시차 (연주시차 × 2)</span><b id="p2-out"></b></div>
-                <div class="row"><span>거리 (광년)</span><b id="ly-out"></b></div>
+                <div class="row"><span>① 6개월 간격 시차</span><b id="p2-out"></b></div>
+                <div class="row"><span>② 연주시차 (① ÷ 2)</span><b id="p-out"></b></div>
+                <div class="row"><span>③ 거리 (1 ÷ 연주시차)</span><b id="pc-out"></b></div>
             </div>`;
         const slider = ctrl.querySelector('#star-d');
         let ang = 200; // 지구 위치 (도). 180 = 1월(왼쪽), 0 = 7월(오른쪽)
@@ -281,7 +281,7 @@
             ctrl.querySelector('#star-d-out').textContent = `${d} pc`;
             ctrl.querySelector('#p-out').textContent = `${p.toFixed(2)}″`;
             ctrl.querySelector('#p2-out').textContent = `${(2 * p).toFixed(2)}″`;
-            ctrl.querySelector('#ly-out').textContent = `약 ${(d * 3.26).toFixed(1)}`;
+            ctrl.querySelector('#pc-out').textContent = `${d} pc`;
         }
         // 지구 끌기
         let dragging = false;
