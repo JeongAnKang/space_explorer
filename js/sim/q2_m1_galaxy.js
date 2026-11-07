@@ -2,7 +2,7 @@
 (function () {
     const { layout } = SimKit;
 
-    // 우리은하 모형 점 만들기 (지름 100 = 10만 광년)
+    // 우리은하 모형 점 만들기 (지름 100 = 약 30,000 pc)
     function makeGalaxy() {
         let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
         const gauss = () => { let u = 0, v = 0; while (!u) u = rnd(); while (!v) v = rnd(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
@@ -27,8 +27,8 @@
         return pts;
     }
     const COLORS = { warm: 'rgba(255, 214, 150, ', pale: 'rgba(225, 232, 255, ', blue: 'rgba(160, 196, 255, ' };
-    // 태양계: 중심에서 약 3만 광년(= 30), 나선팔 사이
-    const SUN = { x: 30 * Math.cos(2.3), y: 30 * Math.sin(2.3), z: 0 };
+    // 태양계: 중심에서 약 8,500 pc (지름 30,000 pc 기준으로 100 × 8500/30000 ≈ 28.3)
+    const SUN = { x: 28.3 * Math.cos(2.3), y: 28.3 * Math.sin(2.3), z: 0 };
 
     function structure(body, api) {
         body.insertAdjacentHTML('beforeend', '<p class="lead">우리은하는 수천억 개의 별이 모인 은하예요. 우리은하 모형을 위에서도, 옆에서도 보며 모양을 비교하고 태양계의 위치를 확인해 보세요. 그림을 위아래로 끌어도 기울어져요.</p>');
@@ -47,8 +47,8 @@
                 <input id="tilt" type="range" min="0" max="90" step="1" value="0"></div>
             <div class="readout">
                 <div class="row"><span>보이는 모양</span><b id="shape"></b></div>
-                <div class="row"><span>지름</span><b>약 10만 광년</b></div>
-                <div class="row"><span>태양계 위치</span><b>중심에서 약 3만 광년</b></div>
+                <div class="row"><span>지름</span><b>약 30,000 pc</b></div>
+                <div class="row"><span>태양계 위치</span><b>중심에서 약 8,500 pc</b></div>
             </div>
             <label style="display:flex;gap:10px;align-items:center;min-height:44px"><input type="checkbox" id="show-sun" checked style="width:22px;height:22px"> 태양계 위치 표시</label>`;
         const slider = ctrl.querySelector('#tilt'), sunBox = ctrl.querySelector('#show-sun');
@@ -75,14 +75,14 @@
                 ctx.beginPath(); ctx.arc(sx, sy, 7, 0, Math.PI * 2); ctx.stroke();
                 ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(sx, sy); ctx.stroke(); ctx.setLineDash([]);
                 ctx.fillStyle = '#f5c451'; ctx.fillText('태양계', sx + 10, sy - 8);
-                ctx.fillStyle = '#a9b1d9'; ctx.fillText('약 3만 광년', (cx + sx) / 2 + 8, (cy + sy) / 2 + 16);
+                ctx.fillStyle = '#a9b1d9'; ctx.fillText('약 8,500 pc', (cx + sx) / 2 + 8, (cy + sy) / 2 + 16);
             }
             // 지름 눈금
             ctx.strokeStyle = '#6f78a8'; ctx.lineWidth = 1.5;
             const yb = h - 18;
             ctx.beginPath(); ctx.moveTo(cx - 50 * k, yb); ctx.lineTo(cx + 50 * k, yb);
             ctx.moveTo(cx - 50 * k, yb - 5); ctx.lineTo(cx - 50 * k, yb + 5); ctx.moveTo(cx + 50 * k, yb - 5); ctx.lineTo(cx + 50 * k, yb + 5); ctx.stroke();
-            ctx.fillStyle = '#a9b1d9'; ctx.textAlign = 'center'; ctx.fillText('약 10만 광년', cx, yb - 8); ctx.textAlign = 'start';
+            ctx.fillStyle = '#a9b1d9'; ctx.textAlign = 'center'; ctx.fillText('약 30,000 pc', cx, yb - 8); ctx.textAlign = 'start';
             const deg = parseFloat(slider.value);
             ctrl.querySelector('#tilt-out').textContent = deg < 15 ? '위에서' : deg > 75 ? '옆에서' : `${deg}°`;
             ctrl.querySelector('#shape').textContent = deg < 15 ? '막대 나선 모양' : deg > 75 ? '중심부가 볼록한 원반 모양' : '기울어진 모습';
@@ -110,10 +110,10 @@
             lines: [
                 '우리은하를 위에서 보면 중심부의 막대 구조를 나선팔이 휘감고 있는 [[막대 나선]] 모양이다.',
                 '우리은하를 옆에서 보면 중심부가 볼록한 [[원반]] 모양이다.',
-                '우리은하의 지름은 약 [[10만 광년]]이다.',
-                '태양계는 우리은하 중심에서 약 [[3만 광년]] 떨어진 곳에 있다.'
+                '우리은하의 지름은 약 [[30,000 pc]]이다.',
+                '태양계는 우리은하 중심에서 약 [[8,500 pc]] 떨어진 곳에 있다.'
             ],
-            extras: ['타원', '공', '1만 광년', '100만 광년'],
+            extras: ['타원', '공', '3,000 pc', '85,000 pc'],
             onSolved: () => api.completeMission()
         });
     }
