@@ -175,37 +175,73 @@
     function brightnessDistance(body, api) {
         body.insertAdjacentHTML('beforeend', '<p class="lead">광원에서 나온 빛은 멀어질수록 더 넓은 면적으로 퍼져요. 거리를 바꾸며 빛이 비추는 칸 수와 한 칸의 밝기를 비교해 보세요.</p>');
         const { view, ctrl } = layout(body);
-        const W = 640, H = 340, LX = 60, LY = 170, U = 150, CELL = 30;
-        const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': '거리에 따라 퍼지는 빛' }, view);
+        // 광원을 가운데 두고 빛이 공 모양(구면)으로 퍼지는 모습
+        // 같은 양의 빛이 지나가는 원뿔이 거리 d의 구면에 닿는 넓이 = d × d 칸, 한 칸의 밝기 = 1/d²
+        const W = 640, H = 430, CX = 250, CY = 215, U = 62, TAN = .26;
+        const CELL = 2 * U * TAN;                                   // 한 칸의 크기는 거리와 상관없이 같음
+        const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': '광원에서 공 모양으로 퍼지는 빛과 거리에 따라 넓어지는 면적' }, view);
+        const defs = svgEl('defs', {}, svg);
+        const src = svgEl('radialGradient', { id: 'bdSrc' }, defs);
+        svgEl('stop', { offset: '0%', 'stop-color': '#fffbe6' }, src);
+        svgEl('stop', { offset: '30%', 'stop-color': '#f5c451', 'stop-opacity': .9 }, src);
+        svgEl('stop', { offset: '100%', 'stop-color': '#f5c451', 'stop-opacity': 0 }, src);
+        const shellG = svgEl('radialGradient', { id: 'bdShell' }, defs);
+        svgEl('stop', { offset: '0%', 'stop-color': '#f5c451', 'stop-opacity': .16 }, shellG);
+        svgEl('stop', { offset: '70%', 'stop-color': '#f5c451', 'stop-opacity': .05 }, shellG);
+        svgEl('stop', { offset: '100%', 'stop-color': '#f5c451', 'stop-opacity': .14 }, shellG);
         const scene = svgEl('g', {}, svg);
+
         ctrl.innerHTML = `
-            <div class="slider"><label for="bd-r">광원까지의 거리 <output id="bd-r-out"></output></label>
-                <input id="bd-r" type="range" min="1" max="3" step="1" value="1"></div>
+            <div><div class="seg" role="group" aria-label="광원까지의 거리">
+                <button type="button" data-r="1" aria-pressed="true">거리 1</button>
+                <button type="button" data-r="2" aria-pressed="false">거리 2</button>
+                <button type="button" data-r="3" aria-pressed="false">거리 3</button>
+            </div></div>
             <div class="readout">
                 <div class="row"><span>빛이 비추는 칸 수</span><b id="bd-n"></b></div>
                 <div class="row"><span>한 칸의 밝기</span><b id="bd-b"></b></div>
             </div>
-            <p class="note">별의 밝기는 거리의 제곱에 반비례해요. 밝기 ∝ 1 / 거리²</p>`;
-        const slider = ctrl.querySelector('#bd-r');
+            <p class="note">별의 밝기는 거리의 제곱에 반비례해요. <b class="key-gold" style="white-space:nowrap">밝기 ∝ 1 / 거리²</b></p>`;
+        let r = 1;
         function draw() {
-            const r = parseInt(slider.value, 10);
             scene.innerHTML = '';
-            const x = LX + r * U, side = r * CELL, top = LY - side / 2;
-            svgEl('polygon', { points: `${LX},${LY} ${x},${top} ${x},${top + side}`, fill: '#f5c451', opacity: .18 }, scene);
-            svgEl('line', { x1: LX, y1: LY, x2: x, y2: top, stroke: '#f5c451', 'stroke-dasharray': '4 4' }, scene);
-            svgEl('line', { x1: LX, y1: LY, x2: x, y2: top + side, stroke: '#f5c451', 'stroke-dasharray': '4 4' }, scene);
-            const shade = 1 / (r * r);
+            // 구면 세 개 (지금 거리의 구면만 또렷하게)
+            [3, 2, 1].forEach(k => {
+                const on = k === r;
+                svgEl('circle', { cx: CX, cy: CY, r: U * k, fill: on ? 'url(#bdShell)' : 'none', stroke: '#f5c451',
+                    'stroke-width': on ? 2.5 : 1, 'stroke-opacity': on ? .95 : .3, 'stroke-dasharray': on ? '' : '5 6' }, scene);
+                // 구의 입체감: 적도 타원
+                svgEl('ellipse', { cx: CX, cy: CY, rx: U * k, ry: U * k * .28, fill: 'none', stroke: '#f5c451', 'stroke-opacity': on ? .35 : .12, 'stroke-dasharray': '3 5' }, scene);
+                const lab = text(scene, CX, CY - U * k - 8, `거리 ${k}`, { 'text-anchor': 'middle', fill: on ? '#f5c451' : '#6f78a8', 'font-weight': on ? 800 : 600, style: 'cursor:pointer' });
+                lab.addEventListener('click', () => select(k));
+            });
+            // 같은 빛 다발(원뿔)과 다른 거리의 사각형 윤곽
+            const far = U * 3 + CELL * 1.5 + 6;
+            svgEl('polygon', { points: `${CX},${CY} ${CX + far},${CY - far * TAN} ${CX + far},${CY + far * TAN}`, fill: '#f5c451', opacity: .07 }, scene);
+            svgEl('line', { x1: CX, y1: CY, x2: CX + far, y2: CY - far * TAN, stroke: '#f5c451', 'stroke-dasharray': '4 4', opacity: .7 }, scene);
+            svgEl('line', { x1: CX, y1: CY, x2: CX + far, y2: CY + far * TAN, stroke: '#f5c451', 'stroke-dasharray': '4 4', opacity: .7 }, scene);
+            [1, 2, 3].forEach(k => {
+                if (k === r) return;
+                const side = CELL * k;
+                svgEl('rect', { x: CX + U * k - side / 2, y: CY - side / 2, width: side, height: side, fill: 'none', stroke: '#6f78a8', 'stroke-dasharray': '3 4' }, scene);
+            });
+            // 지금 거리의 구면에 닿은 사각형: r × r 칸, 한 칸 밝기 1/r²
+            const side = CELL * r, x0 = CX + U * r - side / 2, y0 = CY - side / 2, shade = 1 / (r * r);
             for (let i = 0; i < r; i++) for (let j = 0; j < r; j++) {
-                svgEl('rect', { x: x + i * CELL * .5, y: top + j * CELL, width: CELL * .5, height: CELL, fill: '#f5c451', opacity: .15 + .85 * shade, stroke: '#070a1d' }, scene);
+                svgEl('rect', { x: x0 + i * CELL, y: y0 + j * CELL, width: CELL, height: CELL, fill: '#ffe27a', 'fill-opacity': .18 + .82 * shade, stroke: '#070a1d', 'stroke-width': 1.5 }, scene);
             }
-            svgEl('circle', { cx: LX, cy: LY, r: 14, fill: '#fff1c2' }, scene);
-            text(scene, LX, LY + 34, '광원', { 'text-anchor': 'middle' });
-            [1, 2, 3].forEach(k => text(scene, LX + k * U, H - 18, `거리 ${k}`, { 'text-anchor': 'middle', fill: k === r ? '#f5c451' : '#6f78a8' }));
-            ctrl.querySelector('#bd-r-out').textContent = `${r}`;
+            svgEl('rect', { x: x0, y: y0, width: side, height: side, fill: 'none', stroke: '#f5c451', 'stroke-width': 2 }, scene);
+            text(scene, x0 + side + 10, CY + 5, `${r * r}칸`, { 'text-anchor': 'start', fill: '#f5c451', 'font-weight': 800, 'font-size': 15 });
+            // 광원
+            svgEl('circle', { cx: CX, cy: CY, r: 30, fill: 'url(#bdSrc)' }, scene);
+            svgEl('circle', { cx: CX, cy: CY, r: 7, fill: '#fffbe6' }, scene);
+            text(scene, CX, CY + 44, '광원', { 'text-anchor': 'middle', fill: '#eef1ff', 'font-weight': 700 });
             ctrl.querySelector('#bd-n').textContent = `${r * r}칸`;
             ctrl.querySelector('#bd-b').textContent = r === 1 ? '1' : `1/${r * r}`;
+            ctrl.querySelectorAll('[data-r]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.r === r)));
         }
-        slider.addEventListener('input', draw);
+        function select(k) { r = k; draw(); }
+        ctrl.querySelectorAll('[data-r]').forEach(b => b.addEventListener('click', () => select(+b.dataset.r)));
         draw();
         api.quiz(body, {
             q: '같은 별이 지금보다 3배 먼 곳에 있다면 밝기는 어떻게 될까요?',
