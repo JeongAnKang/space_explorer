@@ -2,17 +2,23 @@
 (function () {
     const { svgEl, layout, text } = SimKit;
 
-    // 표면 온도(K) → 별빛 색 (흑체 복사 색의 근사식)
+    // 표면 온도(K) → 별빛 색 (수업용으로 채도를 높인 색: 적색 → 주황 → 황색 → 백색 → 청색)
+    // 기준 온도 사이는 온도의 로그 값으로 부드럽게 섞음
+    const COLOR_STOPS = [
+        [2500, [255, 30, 10]], [3500, [255, 55, 25]], [4300, [255, 135, 20]], [5500, [255, 214, 10]],
+        [6800, [255, 241, 150]], [8700, [255, 255, 255]], [12000, [170, 205, 255]], [18000, [95, 150, 255]], [30000, [45, 100, 255]]
+    ];
     function tempColor(K) {
-        const t = K / 100;
-        let r, g, b;
-        if (t <= 66) { r = 255; g = 99.47 * Math.log(t) - 161.12; }
-        else { r = 329.7 * Math.pow(t - 60, -0.1332); g = 288.12 * Math.pow(t - 60, -0.0755); }
-        if (t >= 66) b = 255; else if (t <= 19) b = 0; else b = 138.52 * Math.log(t - 10) - 305.04;
-        const c = v => Math.round(Math.max(0, Math.min(255, v)));
-        return `rgb(${c(r)}, ${c(g)}, ${c(b)})`;
+        const lk = Math.log(K);
+        let i = COLOR_STOPS.findIndex(([k]) => k >= K);
+        if (i <= 0) i = i === 0 ? 1 : COLOR_STOPS.length - 1;
+        const [k0, c0] = COLOR_STOPS[i - 1], [k1, c1] = COLOR_STOPS[i];
+        const t = Math.max(0, Math.min(1, (lk - Math.log(k0)) / (Math.log(k1) - Math.log(k0))));
+        const c = c0.map((v, j) => Math.round(v + (c1[j] - v) * t));
+        return `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
     }
     function colorName(K) {
+        if (K >= 20000) return '청색';
         if (K >= 10000) return '청백색';
         if (K >= 7500) return '흰색';
         if (K >= 6000) return '황백색';
