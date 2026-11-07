@@ -43,7 +43,12 @@
             }
             zone.appendChild(chip);
             clearMarks();
+            markFilled();
             onChange && onChange();
+        }
+        // 카드가 들어간 칸은 'filled' 표시 → 문장 속 빈칸은 점선 없이 글자처럼 보임
+        function markFilled() {
+            root.querySelectorAll('.slot').forEach(s => s.classList.toggle('filled', !!s.querySelector('.chip')));
         }
 
         root.addEventListener('pointerdown', e => {

@@ -113,7 +113,7 @@ window.SimKit = {
             const open = i === 0 || stepDone[i - 1] || stepDone[i];
             b.className = 'step-tab' + (i === step ? ' current' : '') + (stepDone[i] ? ' done' : '');
             b.disabled = !open;
-            b.innerHTML = `<span class="n">${i + 1}</span>${st.short || st.title}`;
+            b.innerHTML = `<span class="n">Step ${i + 1}</span>${st.short || st.title}`;
             b.addEventListener('click', () => { if (i !== step) { step = i; render(); } });
             tabs.appendChild(b);
         });
