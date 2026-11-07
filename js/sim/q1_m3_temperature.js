@@ -20,9 +20,9 @@
     function colorName(K) {
         if (K >= 20000) return '청색';
         if (K >= 10000) return '청백색';
-        if (K >= 7500) return '흰색';
+        if (K >= 7500) return '백색';
         if (K >= 6000) return '황백색';
-        if (K >= 5000) return '노란색';
+        if (K >= 5000) return '황색';
         if (K >= 3700) return '주황색';
         return '붉은색';
     }
@@ -90,11 +90,34 @@
             g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); show(); } });
         });
         ctrl.querySelector('#or-lines').addEventListener('change', e => { lines.style.display = e.target.checked ? '' : 'none'; });
-        api.quiz(body, {
-            q: '오리온자리의 베텔게우스와 리겔은 각각 어떤 색으로 보이나요?',
-            options: ['베텔게우스: 청백색, 리겔: 붉은색', '베텔게우스: 붉은색, 리겔: 청백색', '둘 다 노란색'], answer: 1,
-            explain: '맞아요. 베텔게우스는 붉은색, 리겔은 청백색으로 보여요. 별마다 색이 다른 까닭을 다음 단계에서 알아봐요.',
-            hint: '그림에서 베텔게우스와 리겔을 눌러 색을 확인해 보세요.'
+        // 탐구 질문: 두 별의 색을 드롭다운에서 고르기
+        const COLORS = ['붉은색', '주황색', '황색', '황백색', '백색', '청백색', '청색'];
+        const opts = `<option value="">색 고르기</option>` + COLORS.map(c => `<option value="${c}">${c}</option>`).join('');
+        const qz = document.createElement('div');
+        qz.className = 'quiz';
+        qz.innerHTML = `<div class="q"><span class="q-label">탐구 질문</span>오리온자리의 베텔게우스와 리겔은 각각 어떤 색으로 보이나요?</div>
+            <div class="pick-row">
+                <label for="pick-bet">베텔게우스</label><select id="pick-bet" class="pick">${opts}</select>
+                <label for="pick-rig">리겔</label><select id="pick-rig" class="pick">${opts}</select>
+                <button type="button" class="btn btn-primary" id="pick-check">확인</button>
+            </div>
+            <div class="feedback" aria-live="polite"></div>`;
+        body.appendChild(qz);
+        const fb = qz.querySelector('.feedback');
+        qz.querySelector('#pick-check').addEventListener('click', () => {
+            const bet = qz.querySelector('#pick-bet'), rig = qz.querySelector('#pick-rig');
+            if (!bet.value || !rig.value) { fb.className = 'feedback'; fb.textContent = '두 별의 색을 모두 골라 주세요.'; return; }
+            const okB = bet.value === '붉은색', okR = rig.value === '청백색';
+            bet.classList.toggle('right', okB); bet.classList.toggle('wrong', !okB);
+            rig.classList.toggle('right', okR); rig.classList.toggle('wrong', !okR);
+            if (okB && okR) {
+                fb.className = 'feedback ok';
+                fb.textContent = '맞아요. 베텔게우스는 붉은색, 리겔은 청백색으로 보여요. 별마다 색이 다른 까닭을 다음 단계에서 알아봐요.';
+                api.done();
+            } else {
+                fb.className = 'feedback';
+                fb.textContent = '빨간 테두리의 답을 다시 생각해 보세요. 그림에서 별을 눌러 색을 확인할 수 있어요.';
+            }
         });
     }
 
@@ -151,7 +174,7 @@
         draw();
         api.quiz(body, {
             q: '표면 온도가 가장 높은 별은 어떤 색으로 보일까요?',
-            options: ['붉은색', '노란색', '청백색'], answer: 2,
+            options: ['붉은색', '황색', '청백색'], answer: 2,
             explain: '맞아요. 표면 온도가 높을수록 청백색, 낮을수록 붉은색을 띠어요.',
             hint: '온도를 가장 높게, 가장 낮게 바꿔 보며 색을 비교해 보세요.'
         });
@@ -163,8 +186,8 @@
             topLabel: '표면 온도가 높다', bottomLabel: '표면 온도가 낮다',
             items: [
                 { value: 'rigel', label: '청백색 별 — 리겔', extra: '약 12,000 K' },
-                { value: 'sirius', label: '흰색 별 — 시리우스', extra: '약 9,900 K' },
-                { value: 'sun', label: '노란색 별 — 태양', extra: '약 5,800 K' },
+                { value: 'sirius', label: '백색 별 — 시리우스', extra: '약 9,900 K' },
+                { value: 'sun', label: '황색 별 — 태양', extra: '약 5,800 K' },
                 { value: 'aldebaran', label: '주황색 별 — 알데바란', extra: '약 3,900 K' },
                 { value: 'betelgeuse', label: '붉은색 별 — 베텔게우스', extra: '약 3,500 K' }
             ],
