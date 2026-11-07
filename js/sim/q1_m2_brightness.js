@@ -199,10 +199,13 @@
         const GW = 400, GH = 330, gx = v => 70 + (v + 12) * (300 / 24), gy = v => 20 + (12 - v) * (260 / 24);
         const g = svgEl('svg', { viewBox: `0 0 ${GW} ${GH}`, role: 'img', 'aria-label': '별 A, B, C, D의 절대 등급과 겉보기 등급 그래프' }, gw);
         svgEl('rect', { x: gx(-12), y: gy(12), width: gx(12) - gx(-12), height: gy(-12) - gy(12), fill: 'none' }, g);
-        [-10, -5, 5, 10].forEach(v => {
-            svgEl('line', { x1: gx(v), y1: gy(-12), x2: gx(v), y2: gy(12), stroke: '#2f3b78', 'stroke-dasharray': '2 4' }, g);
-            svgEl('line', { x1: gx(-12), y1: gy(v), x2: gx(12), y2: gy(v), stroke: '#2f3b78', 'stroke-dasharray': '2 4' }, g);
-        });
+        // 흰색 눈금 격자: 1칸마다 가는 선, 5칸마다 굵은 선 → 좌표를 정확히 읽을 수 있음
+        for (let v = -12; v <= 12; v++) {
+            const major = v % 5 === 0;
+            const st = { stroke: '#ffffff', 'stroke-opacity': major ? .55 : .16, 'stroke-width': major ? 1.2 : .8 };
+            svgEl('line', { x1: gx(v), y1: gy(-12), x2: gx(v), y2: gy(12), ...st }, g);
+            svgEl('line', { x1: gx(-12), y1: gy(v), x2: gx(12), y2: gy(v), ...st }, g);
+        }
         // 축 (아래쪽 가로축: 절대 등급, 왼쪽 세로축: 겉보기 등급)
         svgEl('line', { x1: gx(-12), y1: gy(-12), x2: gx(12.5), y2: gy(-12), stroke: '#a9b1d9', 'stroke-width': 1.5 }, g);
         svgEl('line', { x1: gx(-12), y1: gy(-12), x2: gx(-12), y2: gy(12.5), stroke: '#a9b1d9', 'stroke-width': 1.5 }, g);
