@@ -1,4 +1,4 @@
-// 퀘스트 1 · 미션 2 밝기 — s1 히파르코스 별의 밝기(등성), s2 겉보기 등급과 절대 등급, s3 밝기와 거리, 내용정리
+// 퀘스트 1 · 미션 2 밝기 — s1 히파르코스 별의 밝기(등성), s2 밝기와 거리, s3 겉보기 등급과 절대 등급, 내용정리
 (function () {
     const { svgEl, layout, text } = SimKit;
 
@@ -233,8 +233,8 @@
 
     SIMS['1_2'] = { steps: [
         { title: '히파르코스 별의 밝기', short: '히파르코스 별의 밝기', build: hipparchus },
-        { title: '겉보기 등급과 절대 등급', short: '겉보기·절대 등급', build: apparentAbsolute },
         { title: '밝기와 거리', short: '밝기와 거리', build: brightnessDistance },
+        { title: '겉보기 등급과 절대 등급', short: '겉보기·절대 등급', build: apparentAbsolute },
         { title: '내용정리', short: '내용정리', build: summary }
     ] };
 })();
