@@ -249,8 +249,7 @@
                 <div class="row"><span>연주시차</span><b id="p-out"></b></div>
                 <div class="row"><span>6개월 간격 시차 (연주시차 × 2)</span><b id="p2-out"></b></div>
                 <div class="row"><span>거리 (광년)</span><b id="ly-out"></b></div>
-            </div>
-            <p class="note">실제 연주시차는 1″(1/3600도)보다도 작아서 그림은 크게 과장했어요. 연주시차가 1″인 별까지의 거리를 1 pc(파섹)이라고 하며, 약 3.26광년이에요.</p>`;
+            </div>`;
         const slider = ctrl.querySelector('#star-d');
         let ang = 200; // 지구 위치 (도). 180 = 1월(왼쪽), 0 = 7월(오른쪽)
         const ePos = a => [SX + RX * Math.cos(a * Math.PI / 180), SY - RY * Math.sin(a * Math.PI / 180)];
@@ -302,6 +301,21 @@
         }));
         slider.addEventListener('input', draw);
         draw();
+        body.insertAdjacentHTML('beforeend', `<div class="concept-box">
+            <p class="concept-lead">실제 연주시차는 1″(1/3600도)보다도 작아서 그림은 크게 과장했어요.</p>
+            <ol>
+                <li><b>연주시차</b>: 6개월 간격으로 관측한 별의 시차의 1/2</li>
+                <li>별의 연주시차는 너무 작아서 단위는 <b>초(″)</b>(1/3600도)를 써요.</li>
+                <li>연주시차가 1″인 별까지의 거리를 <b>1 pc(파섹)</b>이라고 하며, 약 3.26광년이에요.</li>
+                <li>우주에서 거리를 나타내는 단위
+                    <ol class="sub">
+                        <li><b>1 천문단위(AU)</b>: 지구에서 태양까지의 거리</li>
+                        <li><b>1 광년</b>: 빛이 1년 동안 이동하는 거리</li>
+                        <li><b>1 pc(파섹)</b>: 연주시차가 1″인 별까지의 거리 = 약 3.26광년</li>
+                    </ol>
+                </li>
+            </ol>
+        </div>`);
         api.quiz(body, {
             q: '별까지의 거리가 2배가 되면 연주시차는 어떻게 될까요?',
             options: ['2배', '1/2배', '4배', '변하지 않는다'], answer: 1,
