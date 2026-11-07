@@ -4,7 +4,7 @@
 
     // ---------- 단계 1: 시차 (각도기로 직접 재기) ----------
     function parallaxIntro(body, api) {
-        body.insertAdjacentHTML('beforeend', '<p class="lead">팔을 뻗어 연필을 세우고 한쪽 눈씩 번갈아 감아 보면, 연필심 끝이 뒤쪽 배경에 대해 움직여 보여요. 두 눈에서 연필심 끝을 바라본 두 시선이 이루는 각을 <b>시차</b>라고 해요. <b>각도기를 끌어</b> 중심을 연필심 끝에 맞추고, 필요하면 <b>노란 손잡이로 돌려서</b> 시차를 직접 재 보세요.</p>');
+        body.insertAdjacentHTML('beforeend', '<p class="lead">팔을 뻗어 연필을 세우고 한쪽 눈씩 번갈아 감아 보면, 연필심 끝이 뒤쪽 배경에 대해 움직여 보여요. 두 눈에서 연필심 끝을 바라본 <b class="key-pink">두 시선이 이루는 각</b>을 <b class="key-pink">시차</b>라고 해요. <b>각도기를 끌어</b> 중심을 연필심 끝에 맞추고, 필요하면 <b>노란 손잡이로 돌려서</b> 시차를 직접 재 보세요.</p>');
         const { view, ctrl } = layout(body);
         const W = 640, H = 570, BG = 48, EYE_Y = 520, LX = 290, RX = 350, PX = 320, R = 105;
         const depthOf = d => 110 + (d - 1) * 55;                               // 거리 1~5 → 눈에서 연필심 끝까지
@@ -61,10 +61,6 @@
         svgEl('path', { d: `M${R + 20} -4 A7 7 0 1 1 ${R + 21} 5`, fill: 'none', stroke: '#241a00', 'stroke-width': 2 }, knob);
         svgEl('path', { d: `M${R + 17} -8 L${R + 20} -3 L${R + 25} -6`, fill: 'none', stroke: '#241a00', 'stroke-width': 2 }, knob);
         const snapNote = text(svg, 24, 92, '', { fill: '#4fd1b5', 'font-weight': 700, 'pointer-events': 'none' });
-        // 두 시선이 이루는 각 = 시차 (선명한 분홍색)
-        const PINK = '#ff2e93';
-        const angleWedge = svgEl('path', { fill: PINK, 'fill-opacity': .3, stroke: PINK, 'stroke-width': 3, 'pointer-events': 'none' }, svg);
-        const angleLabel = text(svg, 0, 0, '시차', { 'text-anchor': 'end', fill: PINK, 'font-size': 16, 'font-weight': 800, stroke: '#070a1d', 'stroke-width': 4, 'paint-order': 'stroke', 'pointer-events': 'none' });
 
         ctrl.innerHTML = `
             <div><div class="seg" role="group" aria-label="어느 눈으로 볼까요">
@@ -117,13 +113,6 @@
             prot.setAttribute('transform', `translate(${pos.x} ${pos.y}) rotate(${rot})`);
             ctrl.querySelector('#rot-out').textContent = `${Math.round(-rot)}°`;
             snapNote.textContent = snapped ? '중심을 연필심 끝에 맞췄어요' : '';
-            // 연필심 끝에서 두 시선(배경 쪽) 사이의 각을 분홍 부채꼴로
-            const aL = Math.atan2(BG - ty, xl - PX), aR = Math.atan2(BG - ty, xr - PX), r = 46;
-            const both = eye === 'B';
-            angleWedge.style.display = angleLabel.style.display = both ? '' : 'none';
-            angleWedge.setAttribute('d', `M${PX} ${ty} L${PX + r * Math.cos(aL)} ${ty + r * Math.sin(aL)} A${r} ${r} 0 0 0 ${PX + r * Math.cos(aR)} ${ty + r * Math.sin(aR)} Z`);
-            // 이름표는 부채꼴 왼쪽 옆, 각도기 눈금과 겹치지 않는 안쪽 빈 곳에
-            angleLabel.setAttribute('x', PX + 28 * Math.cos(aR) - 22); angleLabel.setAttribute('y', ty + 28 * Math.sin(aR) + 6);
             ctrl.querySelector('#pen-d-out').textContent = labelOf(d);
             ctrl.querySelector('#rL').textContent = tickAt(xl).toFixed(1);
             ctrl.querySelector('#rR').textContent = tickAt(xr).toFixed(1);

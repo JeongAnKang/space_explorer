@@ -19,6 +19,7 @@
     --done-ink: #052a22;
     --wrong: #ff7a8a;        /* 오답 */
     --cool: #8fb4ff;         /* 열림 / 보조 정보 */
+    --pink: #ff4fa3;         /* 핵심 개념 강조 (설명 문장) */
 
     /* 글꼴 (기기에 있는 한글 글꼴 사용) */
     --font-body: "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
@@ -50,6 +51,7 @@ p { margin: 0; }
 button { font: inherit; color: inherit; }
 .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 .hidden { display: none !important; }
+.key-pink { color: var(--pink); font-weight: 800; }
 
 /* ---------- 버튼 ---------- */
 .btn {
