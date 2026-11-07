@@ -48,6 +48,7 @@
 
     function orion(body, api) {
         body.insertAdjacentHTML('beforeend', `<p class="lead">겨울철 남쪽 하늘에서 그림과 같은 별자리를 본 적이 있나요? <b>[별자리 선 보기]</b>를 눌러 보세요.</p>
+            <div><button type="button" class="btn btn-primary" id="or-lines" aria-pressed="false">별자리 선 보기</button></div>
             <p class="lead" id="or-guide" hidden><b>오리온자리</b>를 관측해 보세요. 왼쪽 위의 <b class="key-gold">베텔게우스</b>와 오른쪽 아래의 <b class="key-gold">리겔</b>은 둘 다 아주 밝은 별이지만 <b>색이 서로 달라요</b>. 별을 눌러 색을 확인해 보세요.</p>`);
         const { view, ctrl } = layout(body);
         const W = 640, H = 430;
@@ -67,7 +68,6 @@
                 <div class="row"><span>별 이름</span><b id="or-name">별을 눌러 보세요</b></div>
                 <div class="row"><span>보이는 색</span><b id="or-color">—</b></div>
             </div>
-            <button type="button" class="btn btn-primary" id="or-lines" aria-pressed="false">별자리 선 보기</button>
             <p class="note">별의 색이 다른 까닭은 다음 단계에서 알아봐요.</p>`;
         const seen = new Set();
         ORION.forEach(st => {
@@ -95,7 +95,7 @@
         names.forEach(t => { t.style.display = 'none'; });   // 처음에는 별 이름을 숨김
         // [별자리 선 보기] → 선·이름표·관측 안내·탐구 질문이 나타남 (다시 누르면 선만 숨김)
         let revealed = false;
-        const linesBtn = ctrl.querySelector('#or-lines');
+        const linesBtn = body.querySelector('#or-lines');
         linesBtn.addEventListener('click', () => {
             const on = linesBtn.getAttribute('aria-pressed') !== 'true';
             linesBtn.setAttribute('aria-pressed', String(on));
