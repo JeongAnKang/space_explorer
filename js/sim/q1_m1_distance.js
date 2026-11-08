@@ -205,7 +205,7 @@
 
     // ---------- 단계 2: 연주시차 ----------
     function annualParallax(body, api) {
-        body.insertAdjacentHTML('beforeend', '<p class="lead">지구는 태양 주위를 공전하므로, 6개월 간격으로 같은 별을 관측하면 별이 먼 배경 별에 대해 움직여 보여요. 이때 생기는 시차의 <b>절반</b>을 <b>연주시차</b>라고 해요. 지구를 끌어서 궤도를 따라 옮겨 보세요.</p>');
+        body.insertAdjacentHTML('beforeend', '<p class="lead">지구는 태양 주위를 공전하므로, 6개월 간격으로 같은 별을 관측하면 별이 먼 배경 별에 대해 움직여 보여요. 이때 생기는 시차의 <b>절반</b>을 <b>연주시차</b>라고 해요. [공전 시작]을 눌러 지구가 공전하는 동안 가까운 별의 위치가 어떻게 달라 보이는지 관찰하고, [1월 위치]와 [7월 위치]를 눌러 비교해 보세요.</p>');
         const { view, ctrl } = layout(body);
         const W = 640, H = 430, SX = 320, SY = 360, RX = 150, RY = 46, BG = 40;
         const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': '지구 공전과 연주시차' }, view);
@@ -241,6 +241,7 @@
         ctrl.innerHTML = `
             <div class="slider"><label for="star-d">별까지의 거리 <output id="star-d-out"></output></label>
                 <input id="star-d" type="range" min="1" max="5" step="0.5" value="1"></div>
+            <button type="button" class="btn btn-primary" id="orbit-btn" aria-pressed="false" style="width:100%">공전 시작</button>
             <div><div class="seg" role="group" aria-label="지구 위치">
                 <button type="button" data-pos="180" aria-pressed="false">1월 위치</button>
                 <button type="button" data-pos="0" aria-pressed="false">7월 위치</button>
@@ -283,10 +284,31 @@
             ctrl.querySelector('#p2-out').textContent = `${(2 * p).toFixed(2)}″`;
             ctrl.querySelector('#pc-out').textContent = `${d} pc`;
         }
+        // 자동 공전: 한 바퀴(12개월)에 12초, 반시계 방향
+        const orbitBtn = ctrl.querySelector('#orbit-btn');
+        let spinning = false, last = 0;
+        function setSpin(on) {
+            spinning = on;
+            orbitBtn.textContent = on ? '지구 공전 멈추기' : '공전 시작';
+            orbitBtn.setAttribute('aria-pressed', String(on));
+            orbitBtn.classList.toggle('btn-primary', !on);
+            if (on) {
+                ctrl.querySelectorAll('[data-pos]').forEach(x => x.setAttribute('aria-pressed', 'false'));
+                last = 0; requestAnimationFrame(tick);
+            }
+        }
+        function tick(t) {
+            if (!spinning) return;
+            if (!svg.isConnected) { spinning = false; return; }
+            if (last) ang = (ang + (t - last) * 0.03) % 360;
+            last = t; draw();
+            requestAnimationFrame(tick);
+        }
+        orbitBtn.addEventListener('click', () => setSpin(!spinning));
         // 지구 끌기
         let dragging = false;
         const pt = e => { const r = svg.getBoundingClientRect(); return [(e.clientX - r.left) * W / r.width, (e.clientY - r.top) * H / r.height]; };
-        earth.addEventListener('pointerdown', e => { dragging = true; earth.setPointerCapture(e.pointerId); e.preventDefault(); });
+        earth.addEventListener('pointerdown', e => { setSpin(false); dragging = true; earth.setPointerCapture(e.pointerId); e.preventDefault(); });
         earth.addEventListener('pointermove', e => {
             if (!dragging) return;
             const [x, y] = pt(e);
@@ -295,6 +317,7 @@
         });
         earth.addEventListener('pointerup', () => { dragging = false; });
         ctrl.querySelectorAll('[data-pos]').forEach(b => b.addEventListener('click', () => {
+            setSpin(false);
             ang = parseFloat(b.dataset.pos);
             ctrl.querySelectorAll('[data-pos]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
             draw();
