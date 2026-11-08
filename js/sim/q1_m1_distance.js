@@ -205,7 +205,7 @@
 
     // ---------- 단계 2: 연주시차 ----------
     function annualParallax(body, api) {
-        body.insertAdjacentHTML('beforeend', '<p class="lead">지구는 태양 주위를 공전하므로, 6개월 간격으로 같은 별을 관측하면 별이 먼 배경 별에 대해 움직여 보여요. 이때 생기는, 즉 <b class="key-pink">6개월 간격으로 관측한 시차</b>의 <b>절반</b>을 <b class="key-pink">연주시차</b>라고 해요. [공전 시작]을 눌러 지구가 공전하는 동안 가까운 별의 위치가 어떻게 달라 보이는지 관찰하고, [1월 위치]와 [7월 위치]를 눌러 비교해 보세요.</p>');
+        body.insertAdjacentHTML('beforeend', '<p class="lead">지구는 태양 주위를 공전하므로, 6개월 간격으로 같은 별을 관측하면 별이 먼 배경 별에 대해 움직여 보여요. 이때 생기는, 즉 <b class="key-pink">6개월 간격으로 관측한 시차의 절반</b>을 <b class="key-pink">연주시차</b>라고 해요. [공전 시작]을 눌러 지구가 공전하는 동안 가까운 별의 위치가 어떻게 달라 보이는지 관찰하고, [1월 위치]와 [7월 위치]를 눌러 비교해 보세요.</p>');
         const { view, ctrl } = layout(body);
         const W = 640, H = 430, SX = 320, SY = 360, RX = 150, RY = 46, BG = 40;
         const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': '지구 공전과 연주시차' }, view);
