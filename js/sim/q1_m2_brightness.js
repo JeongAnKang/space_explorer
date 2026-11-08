@@ -64,10 +64,15 @@
         body.insertAdjacentHTML('beforeend', '<p class="lead">약 2,100년 전 그리스의 히파르코스는 맨눈에 보이는 별을 밝기에 따라 나누었어요. 밤하늘의 별을 <b>가장 밝은 별부터 차례로</b> 눌러 1등성부터 6등성까지 나누어 보세요. 별의 크기가 아니라 <b>빛의 밝기</b>를 비교해요.</p>');
         const { view, ctrl } = layout(body);
         const W = 640, H = 360;
-        const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': '밝기가 다른 별 여섯 개' }, view);
-        const spots = [[120, 250, 3], [470, 90, 1], [300, 160, 5], [540, 270, 2], [210, 70, 6], [380, 300, 4]];
+        const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': '밝기가 다른 별 열다섯 개' }, view);
+        // 1등성 1개, 2등성 1개, 3등성 2개, 4등성 3개, 5등성 5개, 6등성 3개
+        const spots = [[120, 250, 3], [470, 90, 1], [300, 250, 5], [540, 270, 2], [210, 310, 6], [380, 300, 4],
+            [330, 60, 3], [250, 170, 4], [600, 160, 4], [160, 80, 5], [50, 160, 5], [420, 190, 5], [560, 40, 5],
+            [60, 310, 6], [140, 160, 6]];
+        const left = {}; spots.forEach(([, , g]) => { left[g] = (left[g] || 0) + 1; });
         let next = 1;
-        ctrl.innerHTML = `<div class="readout" id="hip-list"><div class="row"><span>다음에 누를 별</span><b id="hip-next">1등성</b></div></div>
+        const nextText = () => next <= 6 ? `${next}등성 (남은 별 ${left[next]}개)` : '모두 완료';
+        ctrl.innerHTML = `<div class="readout" id="hip-list"><div class="row"><span>다음에 누를 별</span><b id="hip-next"></b></div></div>
             <p class="note" id="hip-fact" hidden>히파르코스는 <b class="key-gold">가장 밝은 별</b>을 <b class="key-gold">1등성</b>, 맨눈으로 <b class="key-gold">겨우 보이는 별</b>을 <b class="key-gold">6등성</b>으로 나누었어요. 오늘날 측정해 보니 <b class="key-gold">1등성은 6등성보다 약 100배</b> 밝았어요. 지금은 이를 바탕으로 별의 밝기를 '등급'으로 나타내며, <b class="key-gold">1등급 차이</b>는 <b class="key-gold">약 2.5배</b> 밝기 차이예요. <b class="key-gold">숫자가 작을수록 밝은 별</b>이에요.</p>`;
         spots.forEach(([x, y, g]) => {
             const s = drawStar(svg, x, y, g);
@@ -77,8 +82,9 @@
                 if (g !== next) { toast('남은 별 중에 더 밝은 별이 있어요.'); return; }
                 s.dataset.done = '1';
                 text(svg, x, y + 34, `${g}등성`, { 'text-anchor': 'middle', fill: '#f5c451', 'font-size': 15, 'font-weight': 700 });
-                next++;
-                ctrl.querySelector('#hip-next').textContent = next <= 6 ? `${next}등성` : '모두 완료';
+                // 같은 등성의 별은 어느 것을 눌러도 정답, 그 등성을 다 찾으면 다음 등성으로
+                if (--left[g] === 0) next++;
+                ctrl.querySelector('#hip-next').textContent = nextText();
                 if (next > 6) {
                     ctrl.querySelector('#hip-fact').hidden = false;
                     ladder.hidden = false;
@@ -86,6 +92,7 @@
                 }
             });
         });
+        ctrl.querySelector('#hip-next').textContent = nextText();
         const ladder = brightnessLadder('등성');
         ladder.hidden = true;
         body.appendChild(ladder);
