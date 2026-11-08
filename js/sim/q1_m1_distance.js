@@ -213,22 +213,22 @@
         svgEl('rect', { x: 0, y: 0, width: W, height: 70, fill: '#101845' }, svg);
         let seed = 3; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
         for (let i = 0; i < 40; i++) svgEl('circle', { cx: rnd() * W, cy: 10 + rnd() * 50, r: rnd() * 1.6 + .5, fill: '#dfe6ff', opacity: .7 }, svg);
-        const bgLabel = svgEl('text', { x: W - 12, y: 16, 'text-anchor': 'end', fill: '#6f78a8', 'font-size': 12 }, svg); bgLabel.textContent = '아주 먼 배경 별';
+        const bgLabel = svgEl('text', { x: W - 12, y: 64, 'text-anchor': 'end', fill: '#6f78a8', 'font-size': 12 }, svg); bgLabel.textContent = '아주 먼 배경 별';
         svgEl('ellipse', { cx: SX, cy: SY, rx: RX, ry: RY, fill: 'none', stroke: '#2f3b78', 'stroke-width': 2, 'stroke-dasharray': '4 6' }, svg);
         svgEl('circle', { cx: SX, cy: SY, r: 16, fill: '#f5c451' }, svg);
         const sunT = svgEl('text', { x: SX, y: SY + 36, 'text-anchor': 'middle', fill: '#a9b1d9', 'font-size': 13 }, svg); sunT.textContent = '태양';
-        const jan = svgEl('line', { stroke: '#8fb4ff', 'stroke-width': 1.5, opacity: .7 }, svg);
-        const jul = svgEl('line', { stroke: '#8fb4ff', 'stroke-width': 1.5, opacity: .7 }, svg);
+        const jan = svgEl('polyline', { fill: 'none', stroke: '#8fb4ff', 'stroke-width': 1.5, opacity: .7 }, svg);
+        const jul = svgEl('polyline', { fill: 'none', stroke: '#8fb4ff', 'stroke-width': 1.5, opacity: .7 }, svg);
         const toSun = svgEl('line', { stroke: '#6f78a8', 'stroke-width': 1.5, 'stroke-dasharray': '3 4' }, svg);
         const pArc = svgEl('path', { fill: 'none', stroke: '#4fd1b5', 'stroke-width': 3 }, svg);
         const pText = svgEl('text', { fill: '#4fd1b5', 'font-size': 14, 'font-weight': 700 }, svg);
         const janMark = svgEl('g', {}, svg), julMark = svgEl('g', {}, svg);
         [janMark, julMark].forEach((g, i) => {
             svgEl('circle', { r: 6, fill: 'none', stroke: '#8fb4ff', 'stroke-width': 2 }, g);
-            const t = svgEl('text', { y: 24, 'text-anchor': 'middle', fill: '#8fb4ff', 'font-size': 12, 'font-weight': 700 }, g);
+            const t = svgEl('text', { y: -12, 'text-anchor': 'middle', fill: '#8fb4ff', 'font-size': 12, 'font-weight': 700 }, g);
             t.textContent = i ? '7월에 보이는 위치' : '1월에 보이는 위치';
         });
-        const cur = svgEl('line', { stroke: '#f5c451', 'stroke-width': 2, 'stroke-dasharray': '6 5' }, svg);
+        const cur = svgEl('polyline', { fill: 'none', stroke: '#f5c451', 'stroke-width': 2, 'stroke-dasharray': '6 5' }, svg);
         const apparent = svgEl('circle', { r: 7, fill: '#f5c451', stroke: '#fff', 'stroke-width': 2 }, svg);
         const star = svgEl('circle', { r: 9, fill: '#ffd0a0' }, svg);
         const starT = svgEl('text', { 'text-anchor': 'start', fill: '#eef1ff', 'font-size': 13 }, svg); starT.textContent = '가까운 별';
@@ -254,7 +254,11 @@
         const slider = ctrl.querySelector('#star-d');
         let ang = 200; // 지구 위치 (도). 180 = 1월(왼쪽), 0 = 7월(오른쪽)
         const ePos = a => [SX + RX * Math.cos(a * Math.PI / 180), SY - RY * Math.sin(a * Math.PI / 180)];
-        const proj = (ex, ey, sx, sy) => ex + (sx - ex) * (ey - BG) / (ey - sy);
+        // 배경 별에 비친 위치: 시선 방향에 수직인 지구의 위치(좌우)에만 따라 달라짐
+        // → 6개월 간격인 1월(왼쪽 끝)과 7월(오른쪽 끝)에서 가장 크게 벌어짐
+        const proj = (ex, sx, sy) => sx + (sx - ex) * (sy - BG) / (SY - sy);
+        const sight = (el, ex, ey, sx, sy) => el.setAttribute('points', `${ex},${ey} ${sx},${sy} ${proj(ex, sx, sy)},${BG}`);
+        const shown = { 180: false, 0: false }; // 1월·7월 버튼을 눌러야 선이 나타남
         function draw() {
             const d = parseFloat(slider.value);
             const sy = SY - (70 + d * 46), sx = SX;
@@ -262,17 +266,25 @@
             starT.setAttribute('x', sx + 14); starT.setAttribute('y', sy + 4);
             const [ex, ey] = ePos(ang);
             earth.setAttribute('transform', `translate(${ex} ${ey})`);
-            const xb = proj(ex, ey, sx, sy);
-            cur.setAttribute('x1', ex); cur.setAttribute('y1', ey); cur.setAttribute('x2', xb); cur.setAttribute('y2', BG);
+            const xb = proj(ex, sx, sy);
+            sight(cur, ex, ey, sx, sy);
             apparent.setAttribute('cx', xb); apparent.setAttribute('cy', BG);
             const [jx, jy] = ePos(180), [ux, uy] = ePos(0);
-            jan.setAttribute('x1', jx); jan.setAttribute('y1', jy); jan.setAttribute('x2', proj(jx, jy, sx, sy)); jan.setAttribute('y2', BG);
-            jul.setAttribute('x1', ux); jul.setAttribute('y1', uy); jul.setAttribute('x2', proj(ux, uy, sx, sy)); jul.setAttribute('y2', BG);
-            const xj = proj(jx, jy, sx, sy), xu = proj(ux, uy, sx, sy);
+            sight(jan, jx, jy, sx, sy); sight(jul, ux, uy, sx, sy);
+            const xj = proj(jx, sx, sy), xu = proj(ux, sx, sy);
             janMark.setAttribute('transform', `translate(${Math.max(60, Math.min(W - 60, xj))} ${BG})`);
             julMark.setAttribute('transform', `translate(${Math.max(60, Math.min(W - 60, xu))} ${BG})`);
-            janMark.style.display = (xj > -10 && xj < W + 10) ? '' : 'none';
-            julMark.style.display = (xu > -10 && xu < W + 10) ? '' : 'none';
+            // 두 표시가 가까우면 라벨을 양옆으로 벌림
+            const close = Math.abs(xj - xu) < 190;
+            janMark.querySelector('text').setAttribute('text-anchor', close ? 'start' : 'middle');
+            janMark.querySelector('text').setAttribute('x', close ? -4 : 0);
+            julMark.querySelector('text').setAttribute('text-anchor', close ? 'end' : 'middle');
+            julMark.querySelector('text').setAttribute('x', close ? 4 : 0);
+            janMark.style.display = shown[180] && (xj > -10 && xj < W + 10) ? '' : 'none';
+            julMark.style.display = shown[0] && (xu > -10 && xu < W + 10) ? '' : 'none';
+            jan.style.display = shown[180] ? '' : 'none';
+            jul.style.display = shown[0] ? '' : 'none';
+            pArc.style.display = pText.style.display = shown[180] ? '' : 'none';
             toSun.setAttribute('x1', sx); toSun.setAttribute('y1', sy); toSun.setAttribute('x2', SX); toSun.setAttribute('y2', SY);
             // 연주시차 각 p: 별에서 태양 방향과 1월 지구 방향 사이
             const r = 30, a1 = Math.atan2(SY - sy, SX - sx), a2 = Math.atan2(jy - sy, jx - sx);
@@ -319,6 +331,7 @@
         ctrl.querySelectorAll('[data-pos]').forEach(b => b.addEventListener('click', () => {
             setSpin(false);
             ang = parseFloat(b.dataset.pos);
+            shown[b.dataset.pos] = true;
             ctrl.querySelectorAll('[data-pos]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
             draw();
         }));
