@@ -324,22 +324,30 @@
         }));
         slider.addEventListener('input', draw);
         draw();
-        body.insertAdjacentHTML('beforeend', `<div class="concept-box">
-            <p class="concept-lead">실제 연주시차는 1″(1/3600도)보다도 작아서 그림은 크게 과장했어요.</p>
-            <ol>
-                <li><b>연주시차</b>: 6개월 간격으로 관측한 별의 시차의 1/2</li>
-                <li>별의 연주시차는 너무 작아서 단위는 <b>초(″)</b>(1/3600도)를 써요.</li>
-                <li>연주시차가 1″인 별까지의 거리를 <b>1 pc(파섹)</b>이라고 하며, 약 3.26광년이에요.</li>
-                <li>우주에서 거리를 나타내는 단위
-                    <ol class="sub">
-                        <li><b>1 천문단위(AU)</b>: 지구에서 태양까지의 거리</li>
-                        <li><b>1 광년</b>: 빛이 1년 동안 이동하는 거리</li>
-                        <li><b>1 pc(파섹)</b>: 연주시차가 1″인 별까지의 거리 = 약 3.26광년</li>
-                    </ol>
-                </li>
-            </ol>
-        </div>`);
+        // 내용 정리: 핵심 용어를 카드로 채우기 + 탐구 질문 → 둘 다 마쳐야 다음 단계
+        const done = { fill: false, quiz: false };
+        const check = k => { done[k] = true; if (done.fill && done.quiz) api.done(); };
+        const box = document.createElement('div');
+        box.className = 'concept-box';
+        box.innerHTML = `<p class="concept-lead">실제 연주시차는 1″(1/3600도)보다도 작아서 그림은 크게 과장했어요.</p>
+            <p><b style="font-size:13px;letter-spacing:.08em;margin-right:8px">내용 정리</b> 카드를 끌어 빈칸에 놓거나, 카드를 누른 뒤 빈칸을 누르세요. 다 채우면 [확인]을 누르세요.</p>`;
+        body.appendChild(box);
+        Activities.fill(box, {
+            lines: [
+                '1. [[연주시차]]: 6개월 간격으로 관측한 별의 시차의 1/2',
+                '2. 별의 연주시차는 너무 작아서 단위는 [[초(″)]](1/3600도)를 써요.',
+                '3. 연주시차가 1″인 별까지의 거리를 [[1 pc(파섹)]]이라고 하며, 약 3.26광년이에요.',
+                '4. 우주에서 거리를 나타내는 단위',
+                '(1) [[1 천문단위(AU)]]: 지구에서 태양까지의 거리',
+                '(2) [[1 광년]]: 빛이 1년 동안 이동하는 거리',
+                '(3) [[1 pc(파섹)]]: 연주시차가 1″인 별까지의 거리 = 약 3.26광년'
+            ],
+            extras: ['도(°)', '시차'],
+            onSolved: () => check('fill')
+        });
+        box.querySelectorAll('.fill-text p').forEach((el, i) => { if (i >= 4) el.style.paddingLeft = '1.6em'; });
         api.quiz(body, {
+            keepStepOpen: true, onRight: () => check('quiz'),
             q: '별까지의 거리가 2배가 되면 연주시차는 어떻게 될까요?',
             options: ['2배', '1/2배', '4배', '변하지 않는다'], answer: 1,
             explain: '맞아요. 연주시차는 별까지의 거리에 반비례해요. 거리(pc) = 1 ÷ 연주시차(″)',
