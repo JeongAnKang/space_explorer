@@ -124,7 +124,7 @@ window.SimKit = {
         next.hidden = last;
         next.disabled = !stepDone[step];
         hint.textContent = last
-            ? (isMissionCompleted(QUEST_ID, mission) ? '이미 완료한 미션이에요. 다시 연습해도 좋아요.' : '내용정리를 모두 맞히면 미션이 완료돼요.')
+            ? (isMissionCompleted(QUEST_ID, mission) ? '이미 완료한 미션이에요. 다시 연습해도 좋아요.' : '마지막 활동을 마치면 미션이 완료돼요.')
             : (stepDone[step] ? '다음 단계로 넘어갈 수 있어요.' : '시뮬레이션을 조작하고 탐구 질문에 답하면 다음 단계가 열려요.');
     }
 
