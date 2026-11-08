@@ -8,7 +8,7 @@ const TEACHER_SETTINGS = Object.freeze({
     //    그보다 뒤의 퀘스트는 앞 퀘스트를 모두 완료하면 열려요.
     openQuestsUpTo: 1,
     // ② 공개할 마지막 퀘스트: 이 번호보다 뒤의 퀘스트는 완료 여부와 상관없이 잠겨요. (전부 공개: 2)
-    lastVisibleQuest: 2,
+    lastVisibleQuest: 1,
     // ③ 특정 미션만 잠그기: '퀘스트:미션' 형식 (예: ['2:4'] → 퀘스트 2의 미션 4 잠금)
     lockedMissions: []
 });
