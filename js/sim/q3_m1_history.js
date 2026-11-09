@@ -1,46 +1,7 @@
 // 퀘스트 3 · 미션 1 우주 관측의 역사 — 맨눈 → 망원경 → 분광 → 은하 → 보이지 않는 빛
 (function () {
-    const { svgEl, text } = SimKit;
-
     // ---------- 우주 관측의 역사 (스텝 2~6) ----------
-    // 이미지는 Wikimedia Commons에서 바로 불러와요. 각 사진 아래 출처를 누르면 저작자와 이용 조건을 볼 수 있어요.
-    const IMG = (file, w) => `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=${w}`;
-    const PAGE = file => `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(file.replace(/ /g, '_'))}`;
-
-    // 사진 대신 직접 그린 그림 (적당한 공개 이미지가 없을 때)
-    const DRAW = {
-        parallax(svg) {
-            svgEl('rect', { x: 0, y: 0, width: 400, height: 300, fill: '#070a1d' }, svg);
-            for (let i = 0; i < 40; i++) svgEl('circle', { cx: (i * 97) % 400, cy: 12 + (i * 53) % 50, r: .8 + (i % 3) * .4, fill: '#dfe6ff', opacity: .6 }, svg);
-            svgEl('ellipse', { cx: 200, cy: 250, rx: 120, ry: 26, fill: 'none', stroke: '#2f3b78', 'stroke-dasharray': '4 5' }, svg);
-            svgEl('circle', { cx: 200, cy: 250, r: 10, fill: '#f5c451' }, svg);
-            [[80, 250], [320, 250]].forEach(([x, y]) => {
-                svgEl('line', { x1: x, y1: y, x2: 200, y2: 110, stroke: '#8fb4ff', 'stroke-width': 1.4 }, svg);
-                svgEl('circle', { cx: x, cy: y, r: 7, fill: '#4f8dff' }, svg);
-            });
-            svgEl('circle', { cx: 200, cy: 110, r: 7, fill: '#ffd0a0' }, svg);
-            svgEl('path', { d: 'M188 128 A22 22 0 0 0 200 132', fill: 'none', stroke: '#ff4fa3', 'stroke-width': 3 }, svg);
-            text(svg, 212, 104, '백조자리 61번 별', { fill: '#eef1ff', 'font-size': 14 });
-            text(svg, 150, 160, '연주시차 0.314″', { fill: '#ff4fa3', 'font-size': 14, 'font-weight': 700, 'text-anchor': 'end' });
-            text(svg, 200, 286, '태양', { fill: '#a9b1d9', 'font-size': 12, 'text-anchor': 'middle' });
-        },
-        spectral(svg) {
-            svgEl('rect', { x: 0, y: 0, width: 400, height: 300, fill: '#070a1d' }, svg);
-            const T = [['O', '#9bb0ff', 18, '30000K 이상'], ['B', '#aabfff', 16, ''], ['A', '#cad7ff', 14, ''], ['F', '#f8f7ff', 13, ''], ['G', '#fff4ea', 12, '태양'], ['K', '#ffd2a1', 11, ''], ['M', '#ffb36b', 10, '3500K 이하']];
-            T.forEach(([k, c, r, note], i) => {
-                const x = 40 + i * 53;
-                svgEl('circle', { cx: x, cy: 130, r: r + 10, fill: c, opacity: .18 }, svg);
-                svgEl('circle', { cx: x, cy: 130, r, fill: c }, svg);
-                text(svg, x, 190, k, { fill: '#eef1ff', 'font-size': 22, 'font-weight': 700, 'text-anchor': 'middle' });
-                if (note) text(svg, x, 216, note, { fill: '#a9b1d9', 'font-size': 11, 'text-anchor': 'middle' });
-            });
-            svgEl('path', { d: 'M30 250 H370', stroke: '#6f78a8', 'stroke-width': 1.5, 'marker-end': '' }, svg);
-            text(svg, 30, 270, '표면 온도 높음', { fill: '#9bb0ff', 'font-size': 13 });
-            text(svg, 370, 270, '표면 온도 낮음', { fill: '#ffb36b', 'font-size': 13, 'text-anchor': 'end' });
-            text(svg, 200, 50, '캐넌의 분광형 순서', { fill: '#f5c451', 'font-size': 16, 'font-weight': 700, 'text-anchor': 'middle' });
-        }
-    };
-
+    // 그림·카드 타임라인 공통 코드는 js/sim/q3_kit.js (HistoryKit)
     const ERAS = [
         {
             title: '맨눈으로 하늘을 기록하다', years: 'BC 2세기경 – 1609', short: '맨눈 관측',
@@ -235,62 +196,5 @@
         <p class="verdict"><b>결과</b> 우리은하의 크기와 태양의 위치는 섀플리가 더 가까웠고, 나선 성운의 정체는 커티스가 맞았어요. 결론은 몇 년 뒤 허블의 관측이 냈어요.</p>
     </div>`;
 
-    function picture(it, w) {
-        const box = document.createElement('div'); box.className = 'tl-pic';
-        if (it.draw) {
-            const svg = svgEl('svg', { viewBox: '0 0 400 300', role: 'img', 'aria-label': it.cap }, box);
-            DRAW[it.draw](svg);
-            return box;
-        }
-        const img = document.createElement('img');
-        img.src = IMG(it.img.file, w); img.alt = it.img.cap; img.loading = 'lazy'; img.decoding = 'async';
-        img.referrerPolicy = 'no-referrer';
-        img.addEventListener('error', () => { box.innerHTML = `<span class="tl-fallback">${it.n}</span>`; });
-        box.appendChild(img);
-        return box;
-    }
-
-    function eraStep(era, isLast) {
-        return (body, api) => {
-            body.insertAdjacentHTML('beforeend', `<p class="lead"><b class="era-years">${era.years}</b> ${era.lead} 카드를 모두 눌러 읽으면 탐구 질문이 나타나요.</p>`);
-            const track = document.createElement('div'); track.className = 'tl-track';
-            const detail = document.createElement('div'); detail.className = 'tl-detail';
-            detail.innerHTML = '<p class="note">위 카드를 눌러 보세요.</p>';
-            const status = document.createElement('p'); status.className = 'note';
-            body.append(track, detail, status);
-            const seen = new Set();
-            const showStatus = () => { status.textContent = `읽은 카드: ${seen.size} / ${era.items.length}`; };
-            showStatus();
-            const holder = document.createElement('div'); body.appendChild(holder);
-            era.items.forEach((it, i) => {
-                const b = document.createElement('button');
-                b.type = 'button'; b.className = 'tl-card'; b.setAttribute('aria-pressed', 'false');
-                b.appendChild(picture(it, 320));
-                b.insertAdjacentHTML('beforeend', `<span class="yr">${it.y}</span><span class="nm">${it.n}</span>`);
-                track.appendChild(b);
-                b.addEventListener('click', () => {
-                    track.querySelectorAll('.tl-card').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
-                    b.classList.add('seen'); seen.add(i); showStatus();
-                    detail.innerHTML = '';
-                    const fig = document.createElement('figure');
-                    fig.appendChild(picture(it, 800));
-                    const cap = it.draw ? it.cap : it.img.cap;
-                    fig.insertAdjacentHTML('beforeend', `<figcaption>${cap}${it.img ? ` <a href="${PAGE(it.img.file)}" target="_blank" rel="noopener">출처·이용 조건: Wikimedia Commons</a>` : ''}</figcaption>`);
-                    const txt = document.createElement('div');
-                    txt.innerHTML = `<div class="tl-yr">${it.y}</div>
-                        <h4>${it.n}${it.lf ? ` <small>(${it.lf})</small>` : ''}</h4>
-                        <div class="tl-en">${it.en}</div>
-                        <p class="hl">${it.h}</p><p>${it.t}</p>${it.debate ? DEBATE : ''}${it.c ? `<p class="ch">${it.c}</p>` : ''}`;
-                    detail.append(fig, txt);
-                    if (seen.size === era.items.length) quizBox.hidden = false;
-                });
-            });
-            const quizBox = api.quiz(holder, isLast
-                ? { ...era.quiz, keepStepOpen: true, onRight: () => api.completeMission() }
-                : era.quiz);
-            quizBox.hidden = true;
-        };
-    }
-
-    SIMS['3_1'] = { steps: ERAS.map((era, i) => ({ title: `${era.title} (${era.years})`, short: era.short, build: eraStep(era, i === ERAS.length - 1) })) };
+    SIMS['3_1'] = { steps: HistoryKit.steps(ERAS, { lastQuizCompletes: true, extraHtml: it => it.debate ? DEBATE : '' }) };
 })();

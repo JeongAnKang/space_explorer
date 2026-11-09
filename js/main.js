@@ -35,7 +35,9 @@ const QUESTS = {
     3: {
         name: '6개의 밝기에서 우주로', page: 'quest3.html',
         missions: [
-            { id: 1, title: '우주 관측의 역사' }
+            { id: 1, title: '우주 관측의 역사' },
+            { id: 2, title: '우주 탐사선' },
+            { id: 3, title: '대한민국의 우주 역량' }
         ]
     }
 };

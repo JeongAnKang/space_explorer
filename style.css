@@ -374,3 +374,9 @@ input[type="range"] { width: 100%; height: 40px; accent-color: var(--star); touc
     .debate { grid-template-columns: 1fr; }
 }
 .planet.history-q { background: radial-gradient(circle at 35% 35%, #ffe9f3 0%, #ff9db0 22%, #b24fd1 58%, #2a0f45 100%); box-shadow: 0 0 36px rgba(255, 157, 176, .38); }
+/* 퀘스트 3 카드 단계의 조작 활동 */
+.act-box { display: grid; gap: 12px; padding: 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-2); }
+.act-title { margin: 0; font-size: 18px; color: var(--star); }
+.act-box > .note { margin: 0; }
+.act-ctrl { display: grid; gap: 12px; }
+.act-ctrl .seg { flex-wrap: wrap; }
