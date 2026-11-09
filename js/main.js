@@ -10,7 +10,7 @@ const TEACHER_SETTINGS = Object.freeze({
     // ② 공개할 마지막 퀘스트: 이 번호보다 뒤의 퀘스트는 완료 여부와 상관없이 잠겨요. (전부 공개: 3)
     lastVisibleQuest: 3,
     // ③ 특정 미션만 잠그기: '퀘스트:미션' 형식 (예: ['2:4'] → 퀘스트 2의 미션 4 잠금)
-    lockedMissions: []
+    lockedMissions: ['2:1','2:2','2:3''2,4']
 });
 
 // 퀘스트·미션 목록 (미션 수는 퀘스트마다 달라도 됩니다)
